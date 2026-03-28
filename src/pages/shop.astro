@@ -324,11 +324,24 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
 
   let currentView: "grid" | "list" = "grid";
   let currentSort = "featured";
-  let filters = {
-    category: "all",
-    prices: [] as string[],
-    ratings: [] as number[],
-  };
+  let filters = { category: "all", prices: [] as string[], ratings: [] as number[] };
+
+  // ── Filter state ──────────────────────────────────────────────────────────
+
+  type FilterType = "category" | "price" | "rating";
+
+  function updateFilterState(type: FilterType, value: string, checked: boolean) {
+    if (type === "category") {
+      filters.category = value;
+    } else if (type === "price") {
+      if (checked && !filters.prices.includes(value)) filters.prices.push(value);
+      else if (!checked) filters.prices = filters.prices.filter((p) => p !== value);
+    } else {
+      const n = parseInt(value);
+      if (checked && !filters.ratings.includes(n)) filters.ratings.push(n);
+      else if (!checked) filters.ratings = filters.ratings.filter((r) => r !== n);
+    }
+  }
 
   function updateMobileFilterBadge() {
     const count = (filters.category !== "all" ? 1 : 0) + filters.prices.length + filters.ratings.length;
@@ -341,18 +354,12 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
 
   function applyFilters() {
     let visibleCount = 0;
-
     productItems.forEach((item) => {
       const category = item.dataset.category || "";
       const price = parseFloat(item.dataset.price || "0");
       const rating = parseFloat(item.dataset.rating || "0");
-
       let show = true;
-
-      if (filters.category !== "all" && category !== filters.category) {
-        show = false;
-      }
-
+      if (filters.category !== "all" && category !== filters.category) show = false;
       if (filters.prices.length > 0) {
         const inRange = filters.prices.some((range) => {
           const [min, max] = range.split("-").map(Number);
@@ -360,21 +367,70 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
         });
         if (!inRange) show = false;
       }
-
-      if (filters.ratings.length > 0) {
-        const minRating = Math.min(...filters.ratings);
-        if (rating < minRating) show = false;
-      }
-
+      if (filters.ratings.length > 0 && rating < Math.min(...filters.ratings)) show = false;
       item.style.display = show ? "" : "none";
       if (show) visibleCount++;
     });
-
     productCount.textContent = String(visibleCount);
     emptyState.classList.toggle("hidden", visibleCount > 0);
     grid.classList.toggle("hidden", visibleCount === 0);
     pagination.classList.toggle("hidden", visibleCount === 0);
   }
+
+  function clearAllFilters() {
+    filters = { category: "all", prices: [], ratings: [] };
+    document.querySelectorAll('input[name="category"], input[name="mobile-category"]').forEach((el) => {
+      (el as HTMLInputElement).checked = (el as HTMLInputElement).value === "all";
+    });
+    document.querySelectorAll('input[name="price"], input[name="rating"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((el) => {
+      (el as HTMLInputElement).checked = false;
+    });
+    applyFilters();
+    updateMobileFilterBadge();
+  }
+
+  // ── Filter bindings (desktop + mobile unified) ────────────────────────────
+
+  // Maps input name → [counterpart name, filter type]
+  const filterMeta: Record<string, [string, FilterType]> = {
+    "category":        ["mobile-category", "category"],
+    "price":           ["mobile-price",    "price"],
+    "rating":          ["mobile-rating",   "rating"],
+    "mobile-category": ["category",        "category"],
+    "mobile-price":    ["price",           "price"],
+    "mobile-rating":   ["rating",          "rating"],
+  };
+
+  // Desktop: apply immediately on change
+  ["category", "price", "rating"].forEach((name) => {
+    const [syncName, type] = filterMeta[name];
+    document.querySelectorAll(`input[name="${name}"]`).forEach((el) => {
+      el.addEventListener("change", (e) => {
+        const input = e.target as HTMLInputElement;
+        updateFilterState(type, input.value, input.checked);
+        const counterpart = document.querySelector(`input[name="${syncName}"][value="${input.value}"]`) as HTMLInputElement;
+        if (counterpart) counterpart.checked = input.checked;
+        applyFilters();
+        updateMobileFilterBadge();
+      });
+    });
+  });
+
+  // Mobile: sync state, apply deferred to "Apply" button
+  ["mobile-category", "mobile-price", "mobile-rating"].forEach((name) => {
+    const [syncName, type] = filterMeta[name];
+    document.querySelectorAll(`input[name="${name}"]`).forEach((el) => {
+      el.addEventListener("change", (e) => {
+        const input = e.target as HTMLInputElement;
+        updateFilterState(type, input.value, input.checked);
+        const counterpart = document.querySelector(`input[name="${syncName}"][value="${input.value}"]`) as HTMLInputElement;
+        if (counterpart) counterpart.checked = input.checked;
+        updateMobileFilterBadge();
+      });
+    });
+  });
+
+  // ── Sort ──────────────────────────────────────────────────────────────────
 
   function sortProducts() {
     const sorted = [...productItems].sort((a, b) => {
@@ -384,79 +440,23 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
       const ratingB = parseFloat(b.dataset.rating || "0");
       const isNewA = a.dataset.new === "true";
       const isNewB = b.dataset.new === "true";
-
       switch (currentSort) {
-        case "price-asc":
-          return priceA - priceB;
-        case "price-desc":
-          return priceB - priceA;
-        case "rating":
-          return ratingB - ratingA;
-        case "newest":
-          return (isNewB ? 1 : 0) - (isNewA ? 1 : 0);
-        default:
-          return 0;
+        case "price-asc":  return priceA - priceB;
+        case "price-desc": return priceB - priceA;
+        case "rating":     return ratingB - ratingA;
+        case "newest":     return (isNewB ? 1 : 0) - (isNewA ? 1 : 0);
+        default:           return 0;
       }
     });
-
     sorted.forEach((item) => grid.appendChild(item));
   }
-
-  document.querySelectorAll('input[name="category"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      filters.category = (e.target as HTMLInputElement).value;
-      const mobileInput = document.querySelector(`input[name="mobile-category"][value="${filters.category}"]`) as HTMLInputElement;
-      if (mobileInput) mobileInput.checked = true;
-      applyFilters();
-      updateMobileFilterBadge();
-    });
-  });
-
-  document.querySelectorAll('input[name="price"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      const value = (e.target as HTMLInputElement).value;
-      const mobileInput = document.querySelector(`input[name="mobile-price"][value="${value}"]`) as HTMLInputElement;
-      if ((e.target as HTMLInputElement).checked) {
-        filters.prices.push(value);
-        if (mobileInput) mobileInput.checked = true;
-      } else {
-        filters.prices = filters.prices.filter((p) => p !== value);
-        if (mobileInput) mobileInput.checked = false;
-      }
-      applyFilters();
-      updateMobileFilterBadge();
-    });
-  });
-
-  document.querySelectorAll('input[name="rating"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value);
-      const mobileInput = document.querySelector(`input[name="mobile-rating"][value="${value}"]`) as HTMLInputElement;
-      if ((e.target as HTMLInputElement).checked) {
-        filters.ratings.push(value);
-        if (mobileInput) mobileInput.checked = true;
-      } else {
-        filters.ratings = filters.ratings.filter((r) => r !== value);
-        if (mobileInput) mobileInput.checked = false;
-      }
-      applyFilters();
-      updateMobileFilterBadge();
-    });
-  });
 
   const sortToggle = document.getElementById("sort-toggle")!;
   const sortMenu = document.getElementById("sort-menu")!;
   const sortLabel = document.getElementById("sort-label")!;
 
-  sortToggle.addEventListener("click", (e) => {
-    e.stopPropagation();
-    sortMenu.classList.toggle("hidden");
-  });
-
-  document.addEventListener("click", () => {
-    sortMenu.classList.add("hidden");
-  });
-
+  sortToggle.addEventListener("click", (e) => { e.stopPropagation(); sortMenu.classList.toggle("hidden"); });
+  document.addEventListener("click", () => sortMenu.classList.add("hidden"));
   document.querySelectorAll(".sort-option").forEach((btn) => {
     btn.addEventListener("click", () => {
       currentSort = (btn as HTMLElement).dataset.value || "featured";
@@ -466,13 +466,15 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
     });
   });
 
+  // ── View toggle ───────────────────────────────────────────────────────────
+
   const gridViewBtn = document.getElementById("grid-view")!;
   const listViewBtn = document.getElementById("list-view")!;
 
   gridViewBtn.addEventListener("click", () => {
     currentView = "grid";
-    grid.classList.remove("grid-cols-1");
-    grid.classList.add("grid-cols-2", "md:grid-cols-3");
+    grid.classList.replace("grid-cols-1", "grid-cols-2");
+    grid.classList.add("md:grid-cols-3");
     gridViewBtn.classList.add("bg-ink", "text-surface");
     gridViewBtn.classList.remove("text-ink/60");
     listViewBtn.classList.remove("bg-ink", "text-surface");
@@ -489,6 +491,8 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
     gridViewBtn.classList.add("text-ink/60");
   });
 
+  // ── Mobile filter drawer ──────────────────────────────────────────────────
+
   const mobileFilterToggle = document.getElementById("mobile-filter-toggle")!;
   const mobileFilterDrawer = document.getElementById("mobile-filter-drawer")!;
   const mobileFilterPanel = document.getElementById("mobile-filter-panel")!;
@@ -497,17 +501,13 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
 
   function openMobileFilters() {
     mobileFilterDrawer.classList.remove("hidden");
-    requestAnimationFrame(() => {
-      mobileFilterPanel.classList.remove("translate-x-full");
-    });
+    requestAnimationFrame(() => mobileFilterPanel.classList.remove("translate-x-full"));
     document.body.style.overflow = "hidden";
   }
 
   function closeMobileFilters() {
     mobileFilterPanel.classList.add("translate-x-full");
-    setTimeout(() => {
-      mobileFilterDrawer.classList.add("hidden");
-    }, 300);
+    setTimeout(() => mobileFilterDrawer.classList.add("hidden"), 300);
     document.body.style.overflow = "";
   }
 
@@ -515,79 +515,15 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
   mobileFilterClose.addEventListener("click", closeMobileFilters);
   mobileFilterOverlay.addEventListener("click", closeMobileFilters);
 
-  document.querySelectorAll('input[name="mobile-category"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      filters.category = (e.target as HTMLInputElement).value;
-      const desktopInput = document.querySelector(`input[name="category"][value="${filters.category}"]`) as HTMLInputElement;
-      if (desktopInput) desktopInput.checked = true;
-    });
-  });
-
-  document.querySelectorAll('input[name="mobile-price"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      const value = (e.target as HTMLInputElement).value;
-      const desktopInput = document.querySelector(`input[name="price"][value="${value}"]`) as HTMLInputElement;
-      if ((e.target as HTMLInputElement).checked) {
-        if (!filters.prices.includes(value)) filters.prices.push(value);
-        if (desktopInput) desktopInput.checked = true;
-      } else {
-        filters.prices = filters.prices.filter((p) => p !== value);
-        if (desktopInput) desktopInput.checked = false;
-      }
-      updateMobileFilterBadge();
-    });
-  });
-
-  document.querySelectorAll('input[name="mobile-rating"]').forEach((input) => {
-    input.addEventListener("change", (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value);
-      const desktopInput = document.querySelector(`input[name="rating"][value="${value}"]`) as HTMLInputElement;
-      if ((e.target as HTMLInputElement).checked) {
-        if (!filters.ratings.includes(value)) filters.ratings.push(value);
-        if (desktopInput) desktopInput.checked = true;
-      } else {
-        filters.ratings = filters.ratings.filter((r) => r !== value);
-        if (desktopInput) desktopInput.checked = false;
-      }
-      updateMobileFilterBadge();
-    });
-  });
-
   document.getElementById("mobile-apply-filters")?.addEventListener("click", () => {
     applyFilters();
     updateMobileFilterBadge();
     closeMobileFilters();
   });
 
-  document.getElementById("mobile-clear-filters")?.addEventListener("click", () => {
-    filters = { category: "all", prices: [], ratings: [] };
-    document.querySelectorAll('input[name="mobile-category"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((input) => {
-      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
-    });
-    document.querySelectorAll('input[name="category"]').forEach((input) => {
-      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
-    });
-    document.querySelectorAll('input[name="price"], input[name="rating"]').forEach((input) => {
-      (input as HTMLInputElement).checked = false;
-    });
-    updateMobileFilterBadge();
-  });
-
-  document.getElementById("clear-filters")?.addEventListener("click", () => {
-    filters = { category: "all", prices: [], ratings: [] };
-    document.querySelectorAll('input[name="category"], input[name="mobile-category"]').forEach((input) => {
-      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
-    });
-    document.querySelectorAll('input[name="price"], input[name="rating"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((input) => {
-      (input as HTMLInputElement).checked = false;
-    });
-    applyFilters();
-    updateMobileFilterBadge();
-  });
-
-  document.getElementById("reset-filters")?.addEventListener("click", () => {
-    document.getElementById("clear-filters")?.click();
-  });
+  document.getElementById("mobile-clear-filters")?.addEventListener("click", clearAllFilters);
+  document.getElementById("clear-filters")?.addEventListener("click", clearAllFilters);
+  document.getElementById("reset-filters")?.addEventListener("click", clearAllFilters);
 </script>
 
 <style>
