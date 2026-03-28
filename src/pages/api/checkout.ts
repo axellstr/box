@@ -1,10 +1,12 @@
 import type { APIRoute } from "astro";
 import Stripe from "stripe";
-import { newArrivals, topSelling, featuredProduct } from "../../data/products";
+import { allPackages } from "../../data/products";
 
 export const prerender = false;
 
-const allProducts = [...newArrivals, ...topSelling, featuredProduct];
+const PROMO_CODES: Record<string, { percent_off: number; label: string }> = {
+  PROMOX: { percent_off: 15, label: "PROMOX — 15% Off" },
+};
 
 export const POST: APIRoute = async ({ request }) => {
   const secretKey = import.meta.env.STRIPE_SECRET_KEY;
@@ -18,7 +20,10 @@ export const POST: APIRoute = async ({ request }) => {
 
   const stripe = new Stripe(secretKey);
 
-  let body: { items: Array<{ id: string; slug: string; quantity: number; selectedSize?: string; selectedColor?: string }> };
+  let body: {
+    items: Array<{ id: string; slug: string; quantity: number; selectedSize?: string; selectedColor?: string }>;
+    promoCode?: string;
+  };
 
   try {
     body = await request.json();
@@ -38,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = body.items.map((item) => {
-      const product = allProducts.find((p) => p.id === item.id);
+      const product = allPackages.find((p) => p.id === item.id);
       if (!product) {
         throw new Error(`Product not found: ${item.id}`);
       }
@@ -56,6 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
           product_data: {
             name: product.title,
             ...(description && { description }),
+            images: [product.image],
           },
           unit_amount: Math.round(product.price * 100),
         },
@@ -65,10 +71,30 @@ export const POST: APIRoute = async ({ request }) => {
 
     const origin = new URL(request.url).origin;
 
+    // Resolve promo code to a Stripe coupon
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+    const promoKey = body.promoCode?.toUpperCase();
+    if (promoKey && PROMO_CODES[promoKey]) {
+      const promo = PROMO_CODES[promoKey];
+      const couponId = `PROMO_${promoKey}`;
+      try {
+        await stripe.coupons.retrieve(couponId);
+      } catch {
+        await stripe.coupons.create({
+          id: couponId,
+          percent_off: promo.percent_off,
+          duration: "once",
+          name: promo.label,
+        });
+      }
+      discounts = [{ coupon: couponId }];
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items,
       mode: "payment",
+      ...(discounts && { discounts }),
       shipping_address_collection: {
         allowed_countries: [
           "GR", "CY", "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT",

@@ -3,20 +3,20 @@ import { Search, ShoppingCart, Contact, Menu, X, ChevronDown } from "@lucide/ast
 
 const navLinks = [
   { label: "Shop", href: "/shop", hasDropdown: true },
-  { label: "On Sale", href: "/sale" },
-  { label: "New Arrivals", href: "/new" },
-  { label: "Brands", href: "/brands" },
+  { label: "On Sale", href: "#" },
+  { label: "New Arrivals", href: "#" },
+  { label: "Brands", href: "#" },
 ];
 
 const shopCategories = [
-  { label: "Vibrators", href: "/shop/vibrators", image: "/images/categories/vibrators.jpg" },
-  { label: "Dildos", href: "/shop/dildos", image: "/images/categories/dildos.jpg" },
-  { label: "Lubricants", href: "/shop/lubricants", image: "/images/categories/lubricants.jpg" },
-  { label: "Lingerie", href: "/shop/lingerie", image: "/images/categories/lingerie.jpg" },
-  { label: "Bondage", href: "/shop/bondage", image: "/images/categories/bondage.jpg" },
-  { label: "Couples Toys", href: "/shop/couples", image: "/images/categories/couples.jpg" },
-  { label: "Accessories", href: "/shop/accessories", image: "/images/categories/accessories.jpg" },
-  { label: "Gift Sets", href: "/shop/gift-sets", image: "/images/categories/gift-sets.jpg" },
+  { label: "Vibrators", href: "#", image: "/images/categories/vibrators.jpg" },
+  { label: "Dildos", href: "#", image: "/images/categories/dildos.jpg" },
+  { label: "Lubricants", href: "#", image: "/images/categories/lubricants.jpg" },
+  { label: "Lingerie", href: "#", image: "/images/categories/lingerie.jpg" },
+  { label: "Bondage", href: "#", image: "/images/categories/bondage.jpg" },
+  { label: "Couples Toys", href: "#", image: "/images/categories/couples.jpg" },
+  { label: "Accessories", href: "#", image: "/images/categories/accessories.jpg" },
+  { label: "Gift Sets", href: "#", image: "/images/categories/gift-sets.jpg" },
 ];
 ---
 
@@ -72,7 +72,7 @@ const shopCategories = [
         <!-- Search Results Dropdown -->
         <div
           id="desktop-search-results"
-          class="absolute left-0 right-0 top-full mt-7 bg-surface border border-ink/12 rounded-xl shadow-card-hover overflow-hidden
+          class="absolute left-0 right-0 top-full mt-7 bg-surface border border-ink/12 rounded-xl  overflow-hidden
                  opacity-0 translate-y-2 scale-[0.98] pointer-events-none
                  transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         >
@@ -118,7 +118,7 @@ const shopCategories = [
                  transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
                  sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-7 sm:w-[360px] sm:max-h-none sm:rounded-card sm:border
                  sm:translate-y-2 sm:scale-[0.98]
-                 bg-surface shadow-card-hover overflow-hidden flex flex-col"
+                 bg-surface  overflow-hidden flex flex-col"
         >
           <!-- Mobile drag indicator -->
           <div class="flex justify-center pt-2.5 pb-0 sm:hidden">
@@ -142,7 +142,7 @@ const shopCategories = [
           <div id="cart-dropdown-footer" class="hidden p-4 border-t border-ink/12">
             <div class="flex justify-between items-center mb-3">
               <span class="text-sm text-ink/60">Subtotal</span>
-              <span id="cart-dropdown-total" class="font-heading font-bold text-lg">$0</span>
+              <span id="cart-dropdown-total" class="font-heading font-bold text-lg">€0</span>
             </div>
             <a
               href="/cart"
@@ -180,7 +180,7 @@ const shopCategories = [
            opacity-0 -translate-y-2 pointer-events-none
            transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
   >
-    <div class="bg-surface border-b border-ink/12 shadow-card-hover">
+    <div class="bg-surface border-b border-ink/12">
       <div class="container-main py-6">
         <div class="grid grid-cols-12 gap-8">
           <!-- Categories -->
@@ -207,14 +207,14 @@ const shopCategories = [
                   <img src="https://placehold.co/400" alt="Curiosity Starter" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
                 </div>
                 <p class="text-sm font-medium text-ink group-hover:text-accent transition-colors">Curiosity Starter</p>
-                <p class="text-xs text-ink/50 mt-0.5">From $49</p>
+                <p class="text-xs text-ink/50 mt-0.5">From €49</p>
               </a>
               <a href="/product/solo-night-essentials" class="group">
                 <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 mb-2 overflow-hidden">
                   <img src="https://placehold.co/400" alt="Solo Night Essentials" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
                 </div>
                 <p class="text-sm font-medium text-ink group-hover:text-accent transition-colors">Solo Night Essentials</p>
-                <p class="text-xs text-ink/50 mt-0.5">From $79</p>
+                <p class="text-xs text-ink/50 mt-0.5">From €79</p>
               </a>
             </div>
           </div>
@@ -229,19 +229,19 @@ const shopCategories = [
                 </span>
                 View All Products
               </a>
-              <a href="/new" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
                 <span class="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-ink/30 shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 </span>
                 New Arrivals
               </a>
-              <a href="/sale" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
                 <span class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                 </span>
                 On Sale
               </a>
-              <a href="/brands" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
                 <span class="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-ink/30 shrink-0">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 </span>
@@ -262,7 +262,7 @@ const shopCategories = [
     <div id="mobile-menu-overlay" class="absolute inset-0 bg-ink/50"></div>
     <div
       id="mobile-menu-drawer"
-      class="absolute left-0 top-0 h-full w-80 bg-surface shadow-xl transform -translate-x-full transition-transform duration-300 ease-smooth flex flex-col"
+      class="absolute left-0 top-0 h-full w-80 bg-surface  transform -translate-x-full transition-transform duration-300 ease-smooth flex flex-col"
     >
       <div class="flex items-center justify-between px-4 py-4 border-b border-ink/12">
         <img src="/sexlogo.png" alt="sexbox.shop" class="h-7" />
@@ -429,7 +429,7 @@ const shopCategories = [
     }
 
     countSpan.textContent = String(count);
-    totalSpan.textContent = `$${total}`;
+    totalSpan.textContent = `€${total}`;
 
     if (cart.length === 0) {
       itemsContainer.innerHTML = "";
@@ -459,7 +459,7 @@ const shopCategories = [
             <p class="text-sm font-medium text-ink truncate">${item.title}</p>
             ${details ? `<p class="text-xs text-ink/45 mt-0.5">${details}</p>` : ""}
             <div class="flex items-center justify-between mt-1.5">
-              <span class="text-sm font-heading font-bold">$${item.price}</span>
+              <span class="text-sm font-heading font-bold">€${item.price}</span>
               <span class="text-xs text-ink/45">Qty: ${item.quantity}</span>
             </div>
           </div>
@@ -550,7 +550,7 @@ const shopCategories = [
 
   function renderResultCard(product: Product, showBadge: boolean = true): string {
     const saleHtml = product.originalPrice
-      ? `<span class="text-xs text-ink/40 line-through">$${product.originalPrice}</span>`
+      ? `<span class="text-xs text-ink/40 line-through">€${product.originalPrice}</span>`
       : "";
     const tagHtml = showBadge && product.tag
       ? `<span class="inline-block text-[10px] font-medium bg-accent/10 text-accent px-1.5 py-0.5 rounded-full">${product.tag}</span>`
@@ -568,7 +568,7 @@ const shopCategories = [
           </div>
           <p class="text-xs text-ink/50 mt-0.5">${product.category}</p>
           <div class="flex items-center gap-2 mt-0.5">
-            <span class="text-sm font-heading font-bold">$${product.price}</span>
+            <span class="text-sm font-heading font-bold">€${product.price}</span>
             ${saleHtml}
           </div>
         </div>
@@ -603,7 +603,7 @@ const shopCategories = [
     desktopHint.classList.add("hidden");
 
     if (results.length > 0) {
-      desktopList.innerHTML = results.map(renderResultCard).join("")
+      desktopList.innerHTML = results.map(p => renderResultCard(p)).join("")
         + `<a href="/shop" class="block px-4 py-3 text-center text-sm font-medium text-accent hover:bg-ink/[0.03] border-t border-ink/8 transition-colors">View all products</a>`;
     } else {
       desktopEmpty.classList.remove("hidden");

@@ -122,10 +122,14 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
                 <!-- Mobile Filter Button -->
                 <button
                   id="mobile-filter-toggle"
-                  class="lg:hidden inline-flex items-center gap-2 px-4 py-2.5 bg-muted rounded-full text-sm font-medium hover:bg-ink/10 transition-colors"
+                  class="lg:hidden inline-flex items-center gap-2 px-4 py-2.5 bg-muted rounded-full text-sm font-medium hover:bg-ink/10 transition-colors relative"
                 >
                   <SlidersHorizontal size={16} />
                   Filters
+                  <span
+                    id="mobile-filter-badge"
+                    class="hidden absolute -top-1.5 -right-1.5 bg-accent text-surface text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
+                  >0</span>
                 </button>
 
                 <!-- Sort Dropdown -->
@@ -326,6 +330,15 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
     ratings: [] as number[],
   };
 
+  function updateMobileFilterBadge() {
+    const count = (filters.category !== "all" ? 1 : 0) + filters.prices.length + filters.ratings.length;
+    const badge = document.getElementById("mobile-filter-badge");
+    if (badge) {
+      badge.textContent = String(count);
+      badge.classList.toggle("hidden", count === 0);
+    }
+  }
+
   function applyFilters() {
     let visibleCount = 0;
 
@@ -392,31 +405,42 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
   document.querySelectorAll('input[name="category"]').forEach((input) => {
     input.addEventListener("change", (e) => {
       filters.category = (e.target as HTMLInputElement).value;
+      const mobileInput = document.querySelector(`input[name="mobile-category"][value="${filters.category}"]`) as HTMLInputElement;
+      if (mobileInput) mobileInput.checked = true;
       applyFilters();
+      updateMobileFilterBadge();
     });
   });
 
   document.querySelectorAll('input[name="price"]').forEach((input) => {
     input.addEventListener("change", (e) => {
       const value = (e.target as HTMLInputElement).value;
+      const mobileInput = document.querySelector(`input[name="mobile-price"][value="${value}"]`) as HTMLInputElement;
       if ((e.target as HTMLInputElement).checked) {
         filters.prices.push(value);
+        if (mobileInput) mobileInput.checked = true;
       } else {
         filters.prices = filters.prices.filter((p) => p !== value);
+        if (mobileInput) mobileInput.checked = false;
       }
       applyFilters();
+      updateMobileFilterBadge();
     });
   });
 
   document.querySelectorAll('input[name="rating"]').forEach((input) => {
     input.addEventListener("change", (e) => {
       const value = parseInt((e.target as HTMLInputElement).value);
+      const mobileInput = document.querySelector(`input[name="mobile-rating"][value="${value}"]`) as HTMLInputElement;
       if ((e.target as HTMLInputElement).checked) {
         filters.ratings.push(value);
+        if (mobileInput) mobileInput.checked = true;
       } else {
         filters.ratings = filters.ratings.filter((r) => r !== value);
+        if (mobileInput) mobileInput.checked = false;
       }
       applyFilters();
+      updateMobileFilterBadge();
     });
   });
 
@@ -499,8 +523,39 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
     });
   });
 
+  document.querySelectorAll('input[name="mobile-price"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const value = (e.target as HTMLInputElement).value;
+      const desktopInput = document.querySelector(`input[name="price"][value="${value}"]`) as HTMLInputElement;
+      if ((e.target as HTMLInputElement).checked) {
+        if (!filters.prices.includes(value)) filters.prices.push(value);
+        if (desktopInput) desktopInput.checked = true;
+      } else {
+        filters.prices = filters.prices.filter((p) => p !== value);
+        if (desktopInput) desktopInput.checked = false;
+      }
+      updateMobileFilterBadge();
+    });
+  });
+
+  document.querySelectorAll('input[name="mobile-rating"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const value = parseInt((e.target as HTMLInputElement).value);
+      const desktopInput = document.querySelector(`input[name="rating"][value="${value}"]`) as HTMLInputElement;
+      if ((e.target as HTMLInputElement).checked) {
+        if (!filters.ratings.includes(value)) filters.ratings.push(value);
+        if (desktopInput) desktopInput.checked = true;
+      } else {
+        filters.ratings = filters.ratings.filter((r) => r !== value);
+        if (desktopInput) desktopInput.checked = false;
+      }
+      updateMobileFilterBadge();
+    });
+  });
+
   document.getElementById("mobile-apply-filters")?.addEventListener("click", () => {
     applyFilters();
+    updateMobileFilterBadge();
     closeMobileFilters();
   });
 
@@ -509,17 +564,25 @@ const sortParam = Astro.url.searchParams.get("sort") || "featured";
     document.querySelectorAll('input[name="mobile-category"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((input) => {
       (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
     });
-  });
-
-  document.getElementById("clear-filters")?.addEventListener("click", () => {
-    filters = { category: "all", prices: [], ratings: [] };
     document.querySelectorAll('input[name="category"]').forEach((input) => {
       (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
     });
     document.querySelectorAll('input[name="price"], input[name="rating"]').forEach((input) => {
       (input as HTMLInputElement).checked = false;
     });
+    updateMobileFilterBadge();
+  });
+
+  document.getElementById("clear-filters")?.addEventListener("click", () => {
+    filters = { category: "all", prices: [], ratings: [] };
+    document.querySelectorAll('input[name="category"], input[name="mobile-category"]').forEach((input) => {
+      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
+    });
+    document.querySelectorAll('input[name="price"], input[name="rating"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((input) => {
+      (input as HTMLInputElement).checked = false;
+    });
     applyFilters();
+    updateMobileFilterBadge();
   });
 
   document.getElementById("reset-filters")?.addEventListener("click", () => {

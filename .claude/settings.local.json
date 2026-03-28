@@ -6,7 +6,12 @@
       "Bash(grep -r twitter: /home/alex/box/src --include=*.astro)",
       "Bash(find /home/alex/box/src -name \"*.astro\" -exec grep -l \"aria-label\\\\|role=\" {})",
       "Bash(find /home/alex/box/src -name \"*.astro\" -exec grep -l \"img\\\\|image\" {})",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s https://api.svgl.app)",
+      "Bash(python3 -m json.tool)",
+      "Bash(find /home/alex/box -name *.env* -o -name astro.config.*)",
+      "Bash(xargs ls:*)"
     ]
   }
 }

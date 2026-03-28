@@ -93,13 +93,13 @@ const tabs = ["What's Included", "Rating & Reviews"];
         <StarRating rating={product.rating} size={20} showValue class="mb-3" />
 
         <div class="flex items-center gap-3 mb-4">
-          <span class="font-heading text-2xl sm:text-3xl font-bold text-ink">${product.price}</span>
+          <span class="font-heading text-2xl sm:text-3xl font-bold text-ink">€{product.price}</span>
           {product.originalPrice && (
-            <span class="font-heading text-2xl sm:text-3xl font-bold text-ink/45 line-through">${product.originalPrice}</span>
+            <span class="font-heading text-2xl sm:text-3xl font-bold text-ink/45 line-through">€{product.originalPrice}</span>
           )}
           {product.originalPrice && (
             <span class="bg-accent/10 text-accent text-xs font-medium px-3 py-1 rounded-full">
-              Save ${product.originalPrice - product.price}
+              Save €{product.originalPrice - product.price}
             </span>
           )}
         </div>
@@ -166,7 +166,7 @@ const tabs = ["What's Included", "Rating & Reviews"];
           <div class="text-center">
             <Truck size={20} class="mx-auto mb-1.5 text-ink/60" />
             <span class="text-xs text-ink/60 block">Free Shipping</span>
-            <span class="text-xs text-ink/60">Over $75</span>
+            <span class="text-xs text-ink/60">Over €75</span>
           </div>
           <div class="text-center">
             <Shield size={20} class="mx-auto mb-1.5 text-ink/60" />

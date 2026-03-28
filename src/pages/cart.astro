@@ -3,7 +3,9 @@ export const prerender = true;
 
 import Layout from "../layouts/Layout.astro";
 import Breadcrumb from "../components/ui/Breadcrumb.astro";
-import { Tag, ArrowRight } from "@lucide/astro";
+import ProductCard from "../components/ui/ProductCard.astro";
+import { Tag, ArrowRight, ShoppingCart } from "@lucide/astro";
+import { topSelling } from "../data/products";
 ---
 
 <Layout title="Your Cart — sexbox.shop">
@@ -15,14 +17,30 @@ import { Tag, ArrowRight } from "@lucide/astro";
     </h1>
 
     <!-- Empty state -->
-    <div id="cart-empty" class="hidden text-center py-16">
-      <div class="mx-auto mb-4 w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-ink/30"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <div id="cart-empty" class="hidden py-12">
+      <div class="text-center mb-12">
+        <div class="mx-auto mb-5 w-20 h-20 bg-muted rounded-full flex items-center justify-center">
+          <ShoppingCart size={32} class="text-ink/25" />
+        </div>
+        <h2 class="font-heading text-xl sm:text-2xl font-bold text-ink mb-2">Your cart is empty</h2>
+        <p class="text-sm text-ink/50 mb-6 max-w-md mx-auto">
+          Looks like you haven't added anything yet. Explore our bestselling packages to get started.
+        </p>
+        <a href="/shop" class="inline-flex items-center justify-center gap-2 font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-sm px-8 py-3.5 transition-all">
+          Browse All Packages
+          <ArrowRight size={16} />
+        </a>
       </div>
-      <p class="text-ink/45 mb-4">Your cart is empty</p>
-      <a href="/" class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-sm px-8 py-3.5 transition-all">
-        Continue Shopping
-      </a>
+
+      <!-- Recommended products -->
+      <div class="border-t border-ink/8 pt-10">
+        <h3 class="font-heading text-lg sm:text-xl font-bold text-ink mb-6 text-center">Popular Picks You Might Love</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+          {topSelling.slice(0, 4).map((product) => (
+            <ProductCard product={product} />
+          ))}
+        </div>
+      </div>
     </div>
 
     <!-- Cart content (shown when items exist) -->
@@ -44,32 +62,40 @@ import { Tag, ArrowRight } from "@lucide/astro";
             <div class="space-y-4 mb-5 pb-5 border-b border-ink/12">
               <div class="flex items-center justify-between">
                 <span class="text-ink/60">Subtotal</span>
-                <span id="summary-subtotal" class="font-heading font-bold text-ink">$0</span>
+                <span id="summary-subtotal" class="font-heading font-bold text-ink">€0</span>
+              </div>
+              <div id="discount-row" class="hidden flex items-center justify-between text-green-600">
+                <span class="text-sm font-medium" id="discount-label">Discount</span>
+                <span id="summary-discount" class="font-heading font-bold">-€0</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-ink/60">Delivery Fee</span>
-                <span id="summary-delivery" class="font-heading font-bold text-ink">$0</span>
+                <span id="summary-delivery" class="font-heading font-bold text-ink">€0</span>
               </div>
             </div>
 
             <div class="flex items-center justify-between mb-6">
               <span class="text-base font-medium text-ink">Total</span>
-              <span id="summary-total" class="font-heading text-xl sm:text-2xl font-bold text-ink">$0</span>
+              <span id="summary-total" class="font-heading text-xl sm:text-2xl font-bold text-ink">€0</span>
             </div>
 
             <!-- Promo Code -->
-            <div class="flex gap-2 mb-6">
-              <div class="relative flex-1">
-                <Tag size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/45" />
-                <input
-                  type="text"
-                  placeholder="Add promo code"
-                  class="w-full bg-muted rounded-full py-3 pl-10 pr-4 text-sm placeholder:text-ink/45 focus:outline-none focus:ring-2 focus:ring-accent/30"
-                />
+            <div class="mb-4">
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <Tag size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/45" />
+                  <input
+                    id="promo-input"
+                    type="text"
+                    placeholder="Add promo code"
+                    class="w-full bg-muted rounded-full py-3 pl-10 pr-4 text-sm placeholder:text-ink/45 focus:outline-none focus:ring-2 focus:ring-accent/30 uppercase"
+                  />
+                </div>
+                <button id="promo-btn" class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-xs px-5 py-2.5 transition-all">
+                  Apply
+                </button>
               </div>
-              <button class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-xs px-5 py-2.5 transition-all">
-                Apply
-              </button>
+              <p id="promo-msg" class="hidden mt-2 text-xs px-1"></p>
             </div>
 
             <button
@@ -108,6 +134,18 @@ import { Tag, ArrowRight } from "@lucide/astro";
   const totalEl = document.getElementById("summary-total") as HTMLElement;
   const checkoutBtn = document.getElementById("checkout-btn") as HTMLElement;
   const checkoutError = document.getElementById("checkout-error") as HTMLElement;
+  const promoInput = document.getElementById("promo-input") as HTMLInputElement;
+  const promoBtn = document.getElementById("promo-btn") as HTMLButtonElement;
+  const promoMsg = document.getElementById("promo-msg") as HTMLElement;
+  const discountRow = document.getElementById("discount-row") as HTMLElement;
+  const discountLabel = document.getElementById("discount-label") as HTMLElement;
+  const discountEl = document.getElementById("summary-discount") as HTMLElement;
+
+  const VALID_PROMOS: Record<string, { percent: number; label: string }> = {
+    PROMOX: { percent: 15, label: "PROMOX (15% off)" },
+  };
+
+  let appliedPromo: string | null = null;
 
   function renderCartItem(item: CartEntry): string {
     const details = [
@@ -144,7 +182,7 @@ import { Tag, ArrowRight } from "@lucide/astro";
             ${details ? `<p>${details}</p>` : ""}
           </div>
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <span class="font-heading font-bold text-lg sm:text-xl text-ink">$${item.price * item.quantity}</span>
+            <span class="font-heading font-bold text-lg sm:text-xl text-ink">€${item.price * item.quantity}</span>
             <div class="inline-flex items-center bg-muted rounded-full">
               <button
                 class="cart-qty-dec w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-ink hover:text-accent transition-colors"
@@ -167,6 +205,28 @@ import { Tag, ArrowRight } from "@lucide/astro";
       </div>`;
   }
 
+  function renderSummary() {
+    const subtotal = getCartTotal();
+    const promo = appliedPromo ? VALID_PROMOS[appliedPromo] : null;
+    const discountAmount = promo ? Math.round(subtotal * promo.percent / 100) : 0;
+    const discountedSubtotal = subtotal - discountAmount;
+    const delivery = discountedSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DELIVERY_FEE;
+    const total = discountedSubtotal + delivery;
+
+    subtotalEl.textContent = `€${subtotal}`;
+
+    if (promo && discountAmount > 0) {
+      discountLabel.textContent = promo.label;
+      discountEl.textContent = `-€${discountAmount}`;
+      discountRow.classList.remove("hidden");
+    } else {
+      discountRow.classList.add("hidden");
+    }
+
+    deliveryEl.textContent = delivery === 0 ? "Free" : `€${delivery}`;
+    totalEl.textContent = `€${total}`;
+  }
+
   function renderCart() {
     const cart = getCart();
 
@@ -181,13 +241,7 @@ import { Tag, ArrowRight } from "@lucide/astro";
 
     itemsEl.innerHTML = cart.map(renderCartItem).join("");
 
-    const subtotal = getCartTotal();
-    const delivery = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DELIVERY_FEE;
-    const total = subtotal + delivery;
-
-    subtotalEl.textContent = `$${subtotal}`;
-    deliveryEl.textContent = delivery === 0 ? "Free" : `$${delivery}`;
-    totalEl.textContent = `$${total}`;
+    renderSummary();
 
     // Wire up remove buttons
     itemsEl.querySelectorAll(".cart-remove").forEach((btn) => {
@@ -219,6 +273,35 @@ import { Tag, ArrowRight } from "@lucide/astro";
     });
   }
 
+  // Promo code
+  promoBtn?.addEventListener("click", () => {
+    const code = promoInput.value.trim().toUpperCase();
+    promoMsg.classList.remove("hidden", "text-green-600", "text-accent");
+
+    if (!code) {
+      promoMsg.textContent = "Please enter a promo code.";
+      promoMsg.classList.add("text-accent");
+      return;
+    }
+
+    if (VALID_PROMOS[code]) {
+      appliedPromo = code;
+      promoInput.disabled = true;
+      promoBtn.disabled = true;
+      promoBtn.textContent = "Applied";
+      promoMsg.textContent = `${VALID_PROMOS[code].percent}% discount applied!`;
+      promoMsg.classList.add("text-green-600");
+      renderSummary();
+    } else {
+      promoMsg.textContent = "Invalid promo code.";
+      promoMsg.classList.add("text-accent");
+    }
+  });
+
+  promoInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") promoBtn.click();
+  });
+
   // Stripe checkout
   checkoutBtn?.addEventListener("click", async () => {
     const cart = getCart();
@@ -240,6 +323,7 @@ import { Tag, ArrowRight } from "@lucide/astro";
             selectedSize: i.selectedSize,
             selectedColor: i.selectedColor,
           })),
+          ...(appliedPromo && { promoCode: appliedPromo }),
         }),
       });
 

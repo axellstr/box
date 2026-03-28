@@ -1,5 +1,5 @@
 /** Placeholder image for products until real assets exist */
-const catalogImageSrc = "https://placehold.co/400";
+const catalogImageSrc = "https://picsum.photos/seed/sexbox/400/400";
 
 export interface Product {
   id: string;
@@ -302,8 +302,8 @@ export const sortOptions = [
 ];
 
 export const priceRanges = [
-  { label: "Under $50", min: 0, max: 50 },
-  { label: "$50 - $100", min: 50, max: 100 },
-  { label: "$100 - $150", min: 100, max: 150 },
-  { label: "$150+", min: 150, max: Infinity },
+  { label: "Under €50", min: 0, max: 50 },
+  { label: "€50 - €100", min: 50, max: 100 },
+  { label: "€100 - €150", min: 100, max: 150 },
+  { label: "€150+", min: 150, max: Infinity },
 ];

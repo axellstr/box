@@ -1,35 +1,143 @@
 ---
-export const prerender = true;
-
 import Layout from "../../layouts/Layout.astro";
+import Stripe from "stripe";
+
+const sessionId = Astro.url.searchParams.get("session_id");
+
+interface OrderItem {
+  name: string;
+  qty: number;
+  amount: number;
+}
+
+interface Order {
+  ref: string;
+  email: string | null;
+  shippingName: string | null;
+  currency: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  items: OrderItem[];
+}
+
+let order: Order | null = null;
+
+if (sessionId && import.meta.env.STRIPE_SECRET_KEY) {
+  try {
+    const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY);
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["line_items"],
+    });
+
+    order = {
+      ref: session.id.slice(-8).toUpperCase(),
+      email: session.customer_details?.email ?? null,
+      shippingName: session.collected_information?.shipping_details?.name ?? null,
+      currency: session.currency ?? "eur",
+      subtotal: session.amount_subtotal ?? 0,
+      discount: session.total_details?.amount_discount ?? 0,
+      total: session.amount_total ?? 0,
+      items: (session.line_items?.data ?? []).map((li) => ({
+        name: li.description ?? "Product",
+        qty: li.quantity ?? 1,
+        amount: li.amount_total,
+      })),
+    };
+  } catch {
+    // Invalid or expired session — fall through to generic page
+  }
+}
+
+const fmt = (cents: number, currency: string) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(cents / 100);
 ---
 
 <Layout title="Order Confirmed — sexbox.shop">
-  <div class="container-main py-16 sm:py-24 text-center">
-    <div class="mx-auto max-w-md">
-      <div class="mx-auto mb-6 w-20 h-20 bg-accent-dark/10 rounded-full flex items-center justify-center">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-dark">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
+  <div class="container-main py-16 sm:py-24">
+    <div class="mx-auto max-w-lg">
+      <!-- Icon + heading -->
+      <div class="text-center mb-8">
+        <div class="mx-auto mb-6 w-20 h-20 bg-accent-dark/10 rounded-full flex items-center justify-center">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-dark">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+
+        <h1 class="font-heading text-3xl sm:text-4xl font-bold text-ink uppercase mb-3">
+          Thank you!
+        </h1>
+
+        {order ? (
+          <p class="text-ink/60">
+            Order <span class="font-medium text-ink">#{order.ref}</span> confirmed.
+            {order.email && (
+              <span> A receipt has been sent to <span class="font-medium text-ink">{order.email}</span>.</span>
+            )}
+          </p>
+        ) : (
+          <p class="text-ink/60 leading-relaxed">
+            Your order has been confirmed and is being processed. You'll receive an email confirmation shortly.
+          </p>
+        )}
       </div>
 
-      <h1 class="font-heading text-3xl sm:text-4xl font-bold text-ink uppercase mb-4">
-        Thank you!
-      </h1>
+      {order && (
+        <div class="border border-ink/12 rounded-card overflow-hidden mb-6">
+          <!-- Items -->
+          <div class="divide-y divide-ink/8">
+            {order.items.map((item) => (
+              <div class="flex items-center justify-between px-5 py-4">
+                <div class="flex items-center gap-3 min-w-0">
+                  <span class="text-xs font-medium text-ink/45 bg-muted rounded-full w-6 h-6 flex items-center justify-center shrink-0">
+                    {item.qty}
+                  </span>
+                  <span class="text-sm font-medium text-ink truncate">{item.name}</span>
+                </div>
+                <span class="text-sm font-heading font-bold text-ink shrink-0 ml-4">
+                  {fmt(item.amount, order!.currency)}
+                </span>
+              </div>
+            ))}
+          </div>
 
-      <p class="text-ink/60 leading-relaxed mb-2">
-        Your order has been confirmed and is being processed.
-      </p>
-      <p class="text-ink/60 leading-relaxed mb-8">
-        You'll receive an email confirmation with your order details and tracking information shortly. Everything ships in discreet packaging.
+          <!-- Totals -->
+          <div class="bg-muted/50 px-5 py-4 space-y-2.5 border-t border-ink/8">
+            {order.discount > 0 && (
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-ink/60">Subtotal</span>
+                <span class="font-medium text-ink">{fmt(order.subtotal, order.currency)}</span>
+              </div>
+              <div class="flex items-center justify-between text-sm text-green-600">
+                <span class="font-medium">Discount</span>
+                <span class="font-medium">-{fmt(order.discount, order.currency)}</span>
+              </div>
+            )}
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-ink">Total</span>
+              <span class="font-heading text-xl font-bold text-ink">{fmt(order.total, order.currency)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <!-- Shipping note -->
+      <p class="text-center text-sm text-ink/50 mb-8">
+        {order?.shippingName ? (
+          <>Shipping to <span class="text-ink/70 font-medium">{order.shippingName}</span> in discreet packaging.</>
+        ) : (
+          "Everything ships in discreet packaging with no brand identifiers."
+        )}
       </p>
 
-      <a
-        href="/"
-        class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-base px-10 py-4 transition-all"
-      >
-        Continue Shopping
-      </a>
+      <div class="text-center">
+        <a
+          href="/"
+          class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-base px-10 py-4 transition-all"
+        >
+          Continue Shopping
+        </a>
+      </div>
     </div>
   </div>
 </Layout>
