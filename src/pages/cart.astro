@@ -1,0 +1,263 @@
+---
+export const prerender = true;
+
+import Layout from "../layouts/Layout.astro";
+import Breadcrumb from "../components/ui/Breadcrumb.astro";
+import { Tag, ArrowRight } from "@lucide/astro";
+---
+
+<Layout title="Your Cart — sexbox.shop">
+  <div class="container-main py-4 sm:py-6 lg:py-8">
+    <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Cart" }]} />
+
+    <h1 class="font-heading text-3xl sm:text-4xl font-bold text-ink uppercase mb-6 sm:mb-8">
+      Your Cart
+    </h1>
+
+    <!-- Empty state -->
+    <div id="cart-empty" class="hidden text-center py-16">
+      <div class="mx-auto mb-4 w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-ink/30"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      </div>
+      <p class="text-ink/45 mb-4">Your cart is empty</p>
+      <a href="/" class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-sm px-8 py-3.5 transition-all">
+        Continue Shopping
+      </a>
+    </div>
+
+    <!-- Cart content (shown when items exist) -->
+    <div id="cart-content" class="hidden">
+      <div class="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
+        <!-- Cart Items -->
+        <div
+          id="cart-items"
+          class="flex w-full min-w-0 flex-1 flex-col gap-4 border border-ink/12 rounded-card p-4 sm:p-6"
+        >
+          <!-- JS renders items here -->
+        </div>
+
+        <!-- Order Summary -->
+        <div class="lg:w-[400px] shrink-0">
+          <div class="border border-ink/12 rounded-card p-5 sm:p-6">
+            <h2 class="font-heading text-xl sm:text-2xl font-bold text-ink mb-5">Order Summary</h2>
+
+            <div class="space-y-4 mb-5 pb-5 border-b border-ink/12">
+              <div class="flex items-center justify-between">
+                <span class="text-ink/60">Subtotal</span>
+                <span id="summary-subtotal" class="font-heading font-bold text-ink">$0</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-ink/60">Delivery Fee</span>
+                <span id="summary-delivery" class="font-heading font-bold text-ink">$0</span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mb-6">
+              <span class="text-base font-medium text-ink">Total</span>
+              <span id="summary-total" class="font-heading text-xl sm:text-2xl font-bold text-ink">$0</span>
+            </div>
+
+            <!-- Promo Code -->
+            <div class="flex gap-2 mb-6">
+              <div class="relative flex-1">
+                <Tag size={16} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/45" />
+                <input
+                  type="text"
+                  placeholder="Add promo code"
+                  class="w-full bg-muted rounded-full py-3 pl-10 pr-4 text-sm placeholder:text-ink/45 focus:outline-none focus:ring-2 focus:ring-accent/30"
+                />
+              </div>
+              <button class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-xs px-5 py-2.5 transition-all">
+                Apply
+              </button>
+            </div>
+
+            <button
+              id="checkout-btn"
+              class="inline-flex items-center justify-center gap-2 font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-base px-10 py-4 transition-all w-full"
+            >
+              Go to Checkout
+              <ArrowRight size={18} />
+            </button>
+
+            <p id="checkout-error" class="hidden mt-3 text-center text-sm text-accent"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import {
+    getCart,
+    removeFromCart,
+    updateQuantity,
+    getCartTotal,
+    type CartEntry,
+  } from "../lib/cart";
+
+  const DELIVERY_FEE = 15;
+  const FREE_SHIPPING_THRESHOLD = 200;
+
+  const emptyEl = document.getElementById("cart-empty") as HTMLElement;
+  const contentEl = document.getElementById("cart-content") as HTMLElement;
+  const itemsEl = document.getElementById("cart-items") as HTMLElement;
+  const subtotalEl = document.getElementById("summary-subtotal") as HTMLElement;
+  const deliveryEl = document.getElementById("summary-delivery") as HTMLElement;
+  const totalEl = document.getElementById("summary-total") as HTMLElement;
+  const checkoutBtn = document.getElementById("checkout-btn") as HTMLElement;
+  const checkoutError = document.getElementById("checkout-error") as HTMLElement;
+
+  function renderCartItem(item: CartEntry): string {
+    const details = [
+      item.selectedSize ? `Size: <span class="text-ink/45">${item.selectedSize}</span>` : "",
+      item.selectedColor ? `Color: <span class="text-ink/45">${item.selectedColor}</span>` : "",
+    ]
+      .filter(Boolean)
+      .join("&nbsp;&nbsp;");
+
+    const key = `${item.id}|${item.selectedSize ?? ""}|${item.selectedColor ?? ""}`;
+
+    return `
+      <div
+        class="cart-item flex flex-row items-start gap-4 rounded-xl border border-ink/10 bg-surface p-3 sm:p-4 shadow-card"
+        data-cart-item="${key}"
+      >
+        <div class="w-[88px] h-[88px] sm:w-[100px] sm:h-[100px] bg-muted rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+          <img src="${item.image}" alt="${item.title}" class="h-full w-full object-cover" onerror="this.parentElement.innerHTML='<span class=\\'text-[10px] text-ink/45 text-center px-2\\'>${item.title}</span>'" />
+        </div>
+        <div class="flex min-w-0 flex-1 flex-col gap-2 sm:gap-3">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-heading font-bold text-sm sm:text-base text-ink min-w-0 pr-1">${item.title}</h3>
+            <button
+              class="cart-remove text-accent hover:text-accent-dark transition-colors shrink-0"
+              data-id="${item.id}"
+              data-size="${item.selectedSize ?? ""}"
+              data-color="${item.selectedColor ?? ""}"
+              aria-label="Remove item"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+          <div class="text-xs text-ink/60 space-y-0.5">
+            ${details ? `<p>${details}</p>` : ""}
+          </div>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <span class="font-heading font-bold text-lg sm:text-xl text-ink">$${item.price * item.quantity}</span>
+            <div class="inline-flex items-center bg-muted rounded-full">
+              <button
+                class="cart-qty-dec w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-ink hover:text-accent transition-colors"
+                data-id="${item.id}" data-size="${item.selectedSize ?? ""}" data-color="${item.selectedColor ?? ""}"
+                aria-label="Decrease quantity"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <span class="w-7 text-center text-sm font-medium">${item.quantity}</span>
+              <button
+                class="cart-qty-inc w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-ink hover:text-accent transition-colors"
+                data-id="${item.id}" data-size="${item.selectedSize ?? ""}" data-color="${item.selectedColor ?? ""}"
+                aria-label="Increase quantity"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderCart() {
+    const cart = getCart();
+
+    if (cart.length === 0) {
+      emptyEl.classList.remove("hidden");
+      contentEl.classList.add("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    contentEl.classList.remove("hidden");
+
+    itemsEl.innerHTML = cart.map(renderCartItem).join("");
+
+    const subtotal = getCartTotal();
+    const delivery = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DELIVERY_FEE;
+    const total = subtotal + delivery;
+
+    subtotalEl.textContent = `$${subtotal}`;
+    deliveryEl.textContent = delivery === 0 ? "Free" : `$${delivery}`;
+    totalEl.textContent = `$${total}`;
+
+    // Wire up remove buttons
+    itemsEl.querySelectorAll(".cart-remove").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = btn as HTMLElement;
+        removeFromCart(el.dataset.id!, el.dataset.size || undefined, el.dataset.color || undefined);
+      });
+    });
+
+    // Wire up quantity buttons
+    itemsEl.querySelectorAll(".cart-qty-dec").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = btn as HTMLElement;
+        const qtySpan = el.nextElementSibling as HTMLElement;
+        const current = parseInt(qtySpan.textContent || "1");
+        if (current > 1) {
+          updateQuantity(el.dataset.id!, el.dataset.size || undefined, el.dataset.color || undefined, current - 1);
+        }
+      });
+    });
+
+    itemsEl.querySelectorAll(".cart-qty-inc").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = btn as HTMLElement;
+        const qtySpan = el.previousElementSibling as HTMLElement;
+        const current = parseInt(qtySpan.textContent || "1");
+        updateQuantity(el.dataset.id!, el.dataset.size || undefined, el.dataset.color || undefined, current + 1);
+      });
+    });
+  }
+
+  // Stripe checkout
+  checkoutBtn?.addEventListener("click", async () => {
+    const cart = getCart();
+    if (cart.length === 0) return;
+
+    checkoutBtn.classList.add("opacity-60", "pointer-events-none");
+    checkoutBtn.textContent = "Redirecting…";
+    checkoutError.classList.add("hidden");
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((i) => ({
+            id: i.id,
+            slug: i.slug,
+            quantity: i.quantity,
+            selectedSize: i.selectedSize,
+            selectedColor: i.selectedColor,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Failed to create checkout session");
+      }
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      checkoutError.textContent = err.message || "Something went wrong. Please try again.";
+      checkoutError.classList.remove("hidden");
+      checkoutBtn.classList.remove("opacity-60", "pointer-events-none");
+      checkoutBtn.innerHTML = `Go to Checkout <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
+    }
+  });
+
+  window.addEventListener("cart-updated", renderCart);
+  renderCart();
+</script>

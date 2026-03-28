@@ -1,0 +1,534 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ProductCard from "../components/ui/ProductCard.astro";
+import Breadcrumb from "../components/ui/Breadcrumb.astro";
+import Button from "../components/ui/Button.astro";
+import { SlidersHorizontal, ChevronDown, Grid3X3, LayoutList, X, Check } from "@lucide/astro";
+import { allPackages, categories, sortOptions, priceRanges } from "../data/products";
+
+const categoryParam = Astro.url.searchParams.get("category") || "all";
+const sortParam = Astro.url.searchParams.get("sort") || "featured";
+---
+
+<Layout title="Shop All Packages — sexbox.shop">
+  <div class="bg-muted/30 min-h-screen">
+    <div class="container-main py-4 sm:py-6 lg:py-8">
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Shop" },
+        ]}
+      />
+
+      <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-6">
+        <!-- Sidebar Filters (Desktop) -->
+        <aside class="hidden lg:block w-64 shrink-0">
+          <div class="bg-surface rounded-card border border-ink/8 p-5 sticky top-24">
+            <div class="flex items-center justify-between mb-5">
+              <h2 class="font-heading font-bold text-lg">Filters</h2>
+              <button id="clear-filters" class="text-sm text-accent hover:underline">Clear all</button>
+            </div>
+
+            <!-- Categories -->
+            <div class="mb-6 pb-6 border-b border-ink/8">
+              <h3 class="font-medium text-sm mb-3">Category</h3>
+              <div class="space-y-2" id="category-filters">
+                {categories.map((cat) => (
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="category"
+                      value={cat.slug}
+                      checked={categoryParam === cat.slug}
+                      class="sr-only peer"
+                    />
+                    <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                      <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                    </span>
+                    <span class="text-sm text-ink/70 group-hover:text-ink peer-checked:text-ink peer-checked:font-medium transition-colors">
+                      {cat.name}
+                    </span>
+                    <span class="ml-auto text-xs text-ink/40">({cat.count})</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Price Range -->
+            <div class="mb-6 pb-6 border-b border-ink/8">
+              <h3 class="font-medium text-sm mb-3">Price Range</h3>
+              <div class="space-y-2" id="price-filters">
+                {priceRanges.map((range, i) => (
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="price"
+                      value={`${range.min}-${range.max}`}
+                      class="sr-only peer"
+                    />
+                    <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                      <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                    </span>
+                    <span class="text-sm text-ink/70 group-hover:text-ink peer-checked:text-ink peer-checked:font-medium transition-colors">
+                      {range.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Rating -->
+            <div class="mb-6">
+              <h3 class="font-medium text-sm mb-3">Rating</h3>
+              <div class="space-y-2" id="rating-filters">
+                {[4, 3, 2].map((stars) => (
+                  <label class="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="rating"
+                      value={stars}
+                      class="sr-only peer"
+                    />
+                    <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                      <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                    </span>
+                    <span class="text-sm text-ink/70 group-hover:text-ink flex items-center gap-1">
+                      {stars}+ <span class="text-amber-400">★</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <Button variant="primary" class="w-full" id="apply-filters">
+              Apply Filters
+            </Button>
+          </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 min-w-0">
+          <!-- Header Bar -->
+          <div class="bg-surface rounded-card border border-ink/8 p-4 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 class="font-heading font-bold text-xl sm:text-2xl">All Packages</h1>
+                <p class="text-sm text-ink/60 mt-1">
+                  Showing <span id="product-count">{allPackages.length}</span> packages
+                </p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <!-- Mobile Filter Button -->
+                <button
+                  id="mobile-filter-toggle"
+                  class="lg:hidden inline-flex items-center gap-2 px-4 py-2.5 bg-muted rounded-full text-sm font-medium hover:bg-ink/10 transition-colors"
+                >
+                  <SlidersHorizontal size={16} />
+                  Filters
+                </button>
+
+                <!-- Sort Dropdown -->
+                <div class="relative" id="sort-dropdown">
+                  <button
+                    id="sort-toggle"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-muted rounded-full text-sm font-medium hover:bg-ink/10 transition-colors"
+                  >
+                    <span id="sort-label">Featured</span>
+                    <ChevronDown size={14} />
+                  </button>
+                  <div
+                    id="sort-menu"
+                    class="hidden absolute right-0 top-full mt-2 w-48 bg-surface border border-ink/12 rounded-card shadow-card-hover z-20 overflow-hidden"
+                  >
+                    {sortOptions.map((option) => (
+                      <button
+                        class="sort-option w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
+                        data-value={option.value}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <!-- View Toggle -->
+                <div class="hidden sm:flex items-center bg-muted rounded-full p-1">
+                  <button
+                    id="grid-view"
+                    class="p-2 rounded-full bg-ink text-surface transition-colors"
+                    aria-label="Grid view"
+                  >
+                    <Grid3X3 size={16} />
+                  </button>
+                  <button
+                    id="list-view"
+                    class="p-2 rounded-full text-ink/60 hover:text-ink transition-colors"
+                    aria-label="List view"
+                  >
+                    <LayoutList size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Filters -->
+          <div id="active-filters" class="hidden flex-wrap gap-2 mb-4">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Product Grid -->
+          <div
+            id="product-grid"
+            class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 lg:gap-6"
+          >
+            {allPackages.map((product) => (
+              <div class="product-item" data-category={product.category.toLowerCase()} data-price={product.price} data-rating={product.rating} data-new={product.isNew} data-sale={product.isSale}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="hidden py-16 text-center">
+            <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <SlidersHorizontal size={24} class="text-ink/40" />
+            </div>
+            <h3 class="font-heading font-bold text-lg mb-2">No packages found</h3>
+            <p class="text-sm text-ink/60 mb-4">Try adjusting your filters to find what you're looking for.</p>
+            <Button variant="outline" id="reset-filters">Clear Filters</Button>
+          </div>
+
+          <!-- Pagination -->
+          <div id="pagination" class="flex items-center justify-center gap-2 mt-8">
+            <button class="px-4 py-2 text-sm font-medium text-ink/60 hover:text-ink transition-colors disabled:opacity-40" disabled>
+              Previous
+            </button>
+            <button class="w-10 h-10 rounded-full bg-ink text-surface text-sm font-medium">1</button>
+            <button class="w-10 h-10 rounded-full text-ink/60 hover:bg-muted text-sm font-medium transition-colors">2</button>
+            <button class="px-4 py-2 text-sm font-medium text-ink/60 hover:text-ink transition-colors">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Filter Drawer -->
+  <div id="mobile-filter-drawer" class="fixed inset-0 z-[60] hidden">
+    <div id="mobile-filter-overlay" class="absolute inset-0 bg-ink/50"></div>
+    <div
+      id="mobile-filter-panel"
+      class="absolute right-0 top-0 h-full w-full max-w-sm bg-surface shadow-xl transform translate-x-full transition-transform duration-300 ease-smooth overflow-y-auto"
+    >
+      <div class="flex items-center justify-between p-4 border-b border-ink/12 sticky top-0 bg-surface z-10">
+        <h2 class="font-heading font-bold text-lg">Filters</h2>
+        <button id="mobile-filter-close" class="text-ink" aria-label="Close filters">
+          <X size={22} />
+        </button>
+      </div>
+
+      <div class="p-4">
+        <!-- Categories (Mobile) -->
+        <div class="mb-6 pb-6 border-b border-ink/8">
+          <h3 class="font-medium text-sm mb-3">Category</h3>
+          <div class="space-y-2" id="mobile-category-filters">
+            {categories.map((cat) => (
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="mobile-category"
+                  value={cat.slug}
+                  checked={categoryParam === cat.slug}
+                  class="sr-only peer"
+                />
+                <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                  <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                </span>
+                <span class="text-sm text-ink/70 group-hover:text-ink peer-checked:text-ink peer-checked:font-medium transition-colors">
+                  {cat.name}
+                </span>
+                <span class="ml-auto text-xs text-ink/40">({cat.count})</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <!-- Price Range (Mobile) -->
+        <div class="mb-6 pb-6 border-b border-ink/8">
+          <h3 class="font-medium text-sm mb-3">Price Range</h3>
+          <div class="space-y-2" id="mobile-price-filters">
+            {priceRanges.map((range) => (
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  name="mobile-price"
+                  value={`${range.min}-${range.max}`}
+                  class="sr-only peer"
+                />
+                <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                  <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                </span>
+                <span class="text-sm text-ink/70 group-hover:text-ink peer-checked:text-ink peer-checked:font-medium transition-colors">
+                  {range.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <!-- Rating (Mobile) -->
+        <div class="mb-6">
+          <h3 class="font-medium text-sm mb-3">Rating</h3>
+          <div class="space-y-2" id="mobile-rating-filters">
+            {[4, 3, 2].map((stars) => (
+              <label class="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  name="mobile-rating"
+                  value={stars}
+                  class="sr-only peer"
+                />
+                <span class="w-5 h-5 rounded border-2 border-ink/20 flex items-center justify-center peer-checked:bg-ink peer-checked:border-ink transition-colors">
+                  <Check size={12} class="text-surface opacity-0 peer-checked:opacity-100" />
+                </span>
+                <span class="text-sm text-ink/70 group-hover:text-ink flex items-center gap-1">
+                  {stars}+ <span class="text-amber-400">★</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-surface border-t border-ink/12 p-4 flex gap-3">
+        <Button variant="outline" class="flex-1" id="mobile-clear-filters">Clear</Button>
+        <Button variant="primary" class="flex-1" id="mobile-apply-filters">Apply</Button>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const grid = document.getElementById("product-grid")!;
+  const productItems = Array.from(grid.querySelectorAll(".product-item")) as HTMLElement[];
+  const emptyState = document.getElementById("empty-state")!;
+  const productCount = document.getElementById("product-count")!;
+  const pagination = document.getElementById("pagination")!;
+
+  let currentView: "grid" | "list" = "grid";
+  let currentSort = "featured";
+  let filters = {
+    category: "all",
+    prices: [] as string[],
+    ratings: [] as number[],
+  };
+
+  function applyFilters() {
+    let visibleCount = 0;
+
+    productItems.forEach((item) => {
+      const category = item.dataset.category || "";
+      const price = parseFloat(item.dataset.price || "0");
+      const rating = parseFloat(item.dataset.rating || "0");
+
+      let show = true;
+
+      if (filters.category !== "all" && category !== filters.category) {
+        show = false;
+      }
+
+      if (filters.prices.length > 0) {
+        const inRange = filters.prices.some((range) => {
+          const [min, max] = range.split("-").map(Number);
+          return price >= min && (max === Infinity || price <= max);
+        });
+        if (!inRange) show = false;
+      }
+
+      if (filters.ratings.length > 0) {
+        const minRating = Math.min(...filters.ratings);
+        if (rating < minRating) show = false;
+      }
+
+      item.style.display = show ? "" : "none";
+      if (show) visibleCount++;
+    });
+
+    productCount.textContent = String(visibleCount);
+    emptyState.classList.toggle("hidden", visibleCount > 0);
+    grid.classList.toggle("hidden", visibleCount === 0);
+    pagination.classList.toggle("hidden", visibleCount === 0);
+  }
+
+  function sortProducts() {
+    const sorted = [...productItems].sort((a, b) => {
+      const priceA = parseFloat(a.dataset.price || "0");
+      const priceB = parseFloat(b.dataset.price || "0");
+      const ratingA = parseFloat(a.dataset.rating || "0");
+      const ratingB = parseFloat(b.dataset.rating || "0");
+      const isNewA = a.dataset.new === "true";
+      const isNewB = b.dataset.new === "true";
+
+      switch (currentSort) {
+        case "price-asc":
+          return priceA - priceB;
+        case "price-desc":
+          return priceB - priceA;
+        case "rating":
+          return ratingB - ratingA;
+        case "newest":
+          return (isNewB ? 1 : 0) - (isNewA ? 1 : 0);
+        default:
+          return 0;
+      }
+    });
+
+    sorted.forEach((item) => grid.appendChild(item));
+  }
+
+  document.querySelectorAll('input[name="category"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      filters.category = (e.target as HTMLInputElement).value;
+      applyFilters();
+    });
+  });
+
+  document.querySelectorAll('input[name="price"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const value = (e.target as HTMLInputElement).value;
+      if ((e.target as HTMLInputElement).checked) {
+        filters.prices.push(value);
+      } else {
+        filters.prices = filters.prices.filter((p) => p !== value);
+      }
+      applyFilters();
+    });
+  });
+
+  document.querySelectorAll('input[name="rating"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const value = parseInt((e.target as HTMLInputElement).value);
+      if ((e.target as HTMLInputElement).checked) {
+        filters.ratings.push(value);
+      } else {
+        filters.ratings = filters.ratings.filter((r) => r !== value);
+      }
+      applyFilters();
+    });
+  });
+
+  const sortToggle = document.getElementById("sort-toggle")!;
+  const sortMenu = document.getElementById("sort-menu")!;
+  const sortLabel = document.getElementById("sort-label")!;
+
+  sortToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    sortMenu.classList.toggle("hidden");
+  });
+
+  document.addEventListener("click", () => {
+    sortMenu.classList.add("hidden");
+  });
+
+  document.querySelectorAll(".sort-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentSort = (btn as HTMLElement).dataset.value || "featured";
+      sortLabel.textContent = btn.textContent || "Featured";
+      sortMenu.classList.add("hidden");
+      sortProducts();
+    });
+  });
+
+  const gridViewBtn = document.getElementById("grid-view")!;
+  const listViewBtn = document.getElementById("list-view")!;
+
+  gridViewBtn.addEventListener("click", () => {
+    currentView = "grid";
+    grid.classList.remove("grid-cols-1");
+    grid.classList.add("grid-cols-2", "md:grid-cols-3");
+    gridViewBtn.classList.add("bg-ink", "text-surface");
+    gridViewBtn.classList.remove("text-ink/60");
+    listViewBtn.classList.remove("bg-ink", "text-surface");
+    listViewBtn.classList.add("text-ink/60");
+  });
+
+  listViewBtn.addEventListener("click", () => {
+    currentView = "list";
+    grid.classList.remove("grid-cols-2", "md:grid-cols-3");
+    grid.classList.add("grid-cols-1");
+    listViewBtn.classList.add("bg-ink", "text-surface");
+    listViewBtn.classList.remove("text-ink/60");
+    gridViewBtn.classList.remove("bg-ink", "text-surface");
+    gridViewBtn.classList.add("text-ink/60");
+  });
+
+  const mobileFilterToggle = document.getElementById("mobile-filter-toggle")!;
+  const mobileFilterDrawer = document.getElementById("mobile-filter-drawer")!;
+  const mobileFilterPanel = document.getElementById("mobile-filter-panel")!;
+  const mobileFilterOverlay = document.getElementById("mobile-filter-overlay")!;
+  const mobileFilterClose = document.getElementById("mobile-filter-close")!;
+
+  function openMobileFilters() {
+    mobileFilterDrawer.classList.remove("hidden");
+    requestAnimationFrame(() => {
+      mobileFilterPanel.classList.remove("translate-x-full");
+    });
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMobileFilters() {
+    mobileFilterPanel.classList.add("translate-x-full");
+    setTimeout(() => {
+      mobileFilterDrawer.classList.add("hidden");
+    }, 300);
+    document.body.style.overflow = "";
+  }
+
+  mobileFilterToggle.addEventListener("click", openMobileFilters);
+  mobileFilterClose.addEventListener("click", closeMobileFilters);
+  mobileFilterOverlay.addEventListener("click", closeMobileFilters);
+
+  document.querySelectorAll('input[name="mobile-category"]').forEach((input) => {
+    input.addEventListener("change", (e) => {
+      filters.category = (e.target as HTMLInputElement).value;
+      const desktopInput = document.querySelector(`input[name="category"][value="${filters.category}"]`) as HTMLInputElement;
+      if (desktopInput) desktopInput.checked = true;
+    });
+  });
+
+  document.getElementById("mobile-apply-filters")?.addEventListener("click", () => {
+    applyFilters();
+    closeMobileFilters();
+  });
+
+  document.getElementById("mobile-clear-filters")?.addEventListener("click", () => {
+    filters = { category: "all", prices: [], ratings: [] };
+    document.querySelectorAll('input[name="mobile-category"], input[name="mobile-price"], input[name="mobile-rating"]').forEach((input) => {
+      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
+    });
+  });
+
+  document.getElementById("clear-filters")?.addEventListener("click", () => {
+    filters = { category: "all", prices: [], ratings: [] };
+    document.querySelectorAll('input[name="category"]').forEach((input) => {
+      (input as HTMLInputElement).checked = (input as HTMLInputElement).value === "all";
+    });
+    document.querySelectorAll('input[name="price"], input[name="rating"]').forEach((input) => {
+      (input as HTMLInputElement).checked = false;
+    });
+    applyFilters();
+  });
+
+  document.getElementById("reset-filters")?.addEventListener("click", () => {
+    document.getElementById("clear-filters")?.click();
+  });
+</script>
+
+<style>
+  input:checked + span svg {
+    opacity: 1;
+  }
+</style>

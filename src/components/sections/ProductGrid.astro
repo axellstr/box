@@ -1,0 +1,32 @@
+---
+import ProductCard from "../ui/ProductCard.astro";
+import SectionHeading from "../ui/SectionHeading.astro";
+import Button from "../ui/Button.astro";
+import type { Product } from "../../data/products";
+
+interface Props {
+  title: string;
+  products: Product[];
+  viewAllHref?: string;
+}
+
+const { title, products, viewAllHref = "/shop" } = Astro.props;
+---
+
+<section class="py-12 sm:py-16 lg:py-20">
+  <div class="container-main">
+    <SectionHeading class="mb-8 sm:mb-12">{title}</SectionHeading>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-8 sm:mb-10">
+      {products.map((product) => (
+        <ProductCard product={product} />
+      ))}
+    </div>
+
+    <div class="text-center">
+      <Button variant="outline" href={viewAllHref}>
+        View All
+      </Button>
+    </div>
+  </div>
+</section>

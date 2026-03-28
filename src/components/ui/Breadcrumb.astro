@@ -1,0 +1,29 @@
+---
+import { ChevronRight } from "@lucide/astro";
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="Breadcrumb" class="mb-4 sm:mb-6">
+  <ol class="flex items-center gap-1 text-sm text-ink/45 flex-wrap">
+    {items.map((item, i) => (
+      <li class="flex items-center gap-1">
+        {i > 0 && <ChevronRight size={14} class="text-ink/25" />}
+        {item.href ? (
+          <a href={item.href} class="hover:text-ink transition-colors">{item.label}</a>
+        ) : (
+          <span class="text-ink">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

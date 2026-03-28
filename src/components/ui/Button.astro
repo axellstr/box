@@ -1,0 +1,49 @@
+---
+interface Props {
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
+  href?: string;
+  fullWidth?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const {
+  variant = "primary",
+  size = "md",
+  href,
+  fullWidth = false,
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const baseClasses =
+  "inline-flex items-center justify-center font-medium rounded-button transition-all duration-200 whitespace-nowrap";
+
+const variants: Record<string, string> = {
+  primary: "bg-ink text-surface hover:bg-ink/85 active:scale-[0.98]",
+  secondary: "bg-accent text-surface hover:bg-accent-dark active:scale-[0.98]",
+  outline: "border border-ink/20 text-ink hover:bg-ink/5 active:scale-[0.98]",
+  ghost: "text-ink hover:bg-ink/5",
+};
+
+const sizes: Record<string, string> = {
+  sm: "text-xs px-5 py-2.5",
+  md: "text-sm px-8 py-3.5",
+  lg: "text-base px-10 py-4",
+};
+
+const classes = [
+  baseClasses,
+  variants[variant],
+  sizes[size],
+  fullWidth && "w-full",
+  className,
+].filter(Boolean).join(" ");
+
+const Tag = href ? "a" : "button";
+---
+
+<Tag href={href} class={classes} {...rest}>
+  <slot />
+</Tag>

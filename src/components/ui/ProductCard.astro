@@ -1,0 +1,68 @@
+---
+import StarRating from "./StarRating.astro";
+import type { Product } from "../../data/products";
+
+interface Props {
+  product: Product;
+  variant?: "default" | "compact";
+}
+
+const { product, variant = "default" } = Astro.props;
+
+const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+const discountPercent = hasDiscount
+  ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+  : 0;
+---
+
+<a href={`/product/${product.slug}`} class="group block">
+  <div class="bg-muted rounded-card overflow-hidden aspect-square flex items-center justify-center mb-3 relative">
+    <img
+      src={product.image}
+      alt={product.title}
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      loading="lazy"
+    />
+    <!-- Badges -->
+    <div class="absolute top-3 left-3 right-3 flex items-start justify-between pointer-events-none">
+      <div class="flex flex-col gap-1.5">
+        {product.tag && (
+          <span class="bg-ink text-surface text-[10px] sm:text-xs font-medium px-2 py-1 rounded-full">
+            {product.tag}
+          </span>
+        )}
+        {product.isNew && !product.tag && (
+          <span class="bg-accent text-surface text-[10px] sm:text-xs font-medium px-2 py-1 rounded-full">
+            New
+          </span>
+        )}
+      </div>
+      {hasDiscount && (
+        <span class="bg-accent/10 text-accent text-[10px] sm:text-xs font-medium px-2 py-1 rounded-full backdrop-blur-sm">
+          -{discountPercent}%
+        </span>
+      )}
+    </div>
+    <!-- Item count badge -->
+    {product.itemCount && (
+      <div class="absolute bottom-3 left-3 bg-surface/90 backdrop-blur-sm text-ink text-[10px] sm:text-xs font-medium px-2.5 py-1 rounded-full shadow-sm">
+        {product.itemCount} items
+      </div>
+    )}
+  </div>
+  <h3 class="font-body font-semibold text-sm sm:text-base text-ink mb-1 truncate group-hover:text-accent transition-colors">
+    {product.title}
+  </h3>
+  {product.shortDescription && variant === "default" && (
+    <p class="text-xs text-ink/60 mb-1.5 line-clamp-1">
+      {product.shortDescription}
+    </p>
+  )}
+  <StarRating rating={product.rating} size={14} showValue class="mb-1.5" />
+  <div class="flex items-center gap-2.5 flex-wrap">
+    <span class="font-heading font-bold text-lg sm:text-xl text-ink">${product.price}</span>
+    {hasDiscount && (
+      <span class="font-heading font-bold text-base sm:text-lg text-ink/40 line-through">${product.originalPrice}</span>
+    )}
+  </div>
+</a>

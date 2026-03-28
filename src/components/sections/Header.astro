@@ -1,0 +1,687 @@
+---
+import { Search, ShoppingCart, Contact, Menu, X, ChevronDown } from "@lucide/astro";
+
+const navLinks = [
+  { label: "Shop", href: "/shop", hasDropdown: true },
+  { label: "On Sale", href: "/sale" },
+  { label: "New Arrivals", href: "/new" },
+  { label: "Brands", href: "/brands" },
+];
+
+const shopCategories = [
+  { label: "Vibrators", href: "/shop/vibrators", image: "/images/categories/vibrators.jpg" },
+  { label: "Dildos", href: "/shop/dildos", image: "/images/categories/dildos.jpg" },
+  { label: "Lubricants", href: "/shop/lubricants", image: "/images/categories/lubricants.jpg" },
+  { label: "Lingerie", href: "/shop/lingerie", image: "/images/categories/lingerie.jpg" },
+  { label: "Bondage", href: "/shop/bondage", image: "/images/categories/bondage.jpg" },
+  { label: "Couples Toys", href: "/shop/couples", image: "/images/categories/couples.jpg" },
+  { label: "Accessories", href: "/shop/accessories", image: "/images/categories/accessories.jpg" },
+  { label: "Gift Sets", href: "/shop/gift-sets", image: "/images/categories/gift-sets.jpg" },
+];
+---
+
+<header class="bg-surface sticky top-0 z-50 border-b border-ink/12">
+  <div class="container-main flex items-center justify-between gap-4 py-4 lg:py-5">
+    <!-- Logo -->
+    <a href="/" class="shrink-0">
+      <img src="/sexlogo.png" alt="sexbox.shop" class="h-7 sm:h-8 w-auto" />
+    </a>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden lg:flex items-center gap-6" aria-label="Main navigation">
+      {navLinks.map((link) => (
+        link.hasDropdown ? (
+          <div id="shop-dropdown-trigger">
+            <a
+              href={link.href}
+              class="shop-nav-link flex items-center gap-1 text-sm font-medium text-ink hover:text-accent transition-colors"
+            >
+              {link.label}
+              <ChevronDown size={14} class="opacity-60 transition-transform duration-200" id="shop-chevron" />
+            </a>
+          </div>
+        ) : (
+          <a
+            href={link.href}
+            class="flex items-center gap-1 text-sm font-medium text-ink hover:text-accent transition-colors"
+          >
+            {link.label}
+          </a>
+        )
+      ))}
+    </nav>
+
+    <!-- Search (Desktop) -->
+    <div class="hidden lg:flex flex-1 max-w-md mx-4">
+      <div class="relative w-full" id="desktop-search-wrapper">
+        <Search size={18} class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/45" />
+        <input
+          id="desktop-search-input"
+          type="text"
+          placeholder="Search for products..."
+          class="w-full bg-muted rounded-full py-2.5 pl-10 pr-10 text-sm text-ink placeholder:text-ink/45 focus:outline-none focus:ring-2 focus:ring-accent/30 transition"
+          autocomplete="off"
+        />
+        <button
+          id="desktop-search-clear"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink/60 transition-colors hidden"
+          aria-label="Clear search"
+        >
+          <X size={14} />
+        </button>
+        <!-- Search Results Dropdown -->
+        <div
+          id="desktop-search-results"
+          class="absolute left-0 right-0 top-full mt-7 bg-surface border border-ink/12 rounded-xl shadow-card-hover overflow-hidden
+                 opacity-0 translate-y-2 scale-[0.98] pointer-events-none
+                 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        >
+          <div id="desktop-search-list" class="max-h-[360px] overflow-y-auto"></div>
+          <div id="desktop-search-empty" class="hidden py-8 text-center text-sm text-ink/45">
+            No products found
+          </div>
+          <div id="desktop-search-hint" class="hidden py-8 text-center text-sm text-ink/45">
+            Start typing to search...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Icons -->
+    <div class="flex items-center justify-center gap-3">
+      <!-- Cart Widget -->
+      <div class="relative inline-flex items-center justify-center" id="cart-widget">
+        <button
+          id="cart-toggle"
+          type="button"
+          class="relative inline-flex items-center justify-center size-10 text-ink hover:text-accent transition-colors"
+          aria-label="Cart"
+          aria-expanded="false"
+        >
+          <ShoppingCart size={22} />
+          <span
+            id="cart-badge"
+            class="absolute -top-1.5 -right-1.5 bg-accent text-surface text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center hidden"
+          >
+            0
+          </span>
+        </button>
+
+        <!-- Cart backdrop (mobile only) -->
+        <div id="cart-backdrop" class="fixed inset-0 bg-ink/40 z-40 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"></div>
+
+        <!-- Cart Dropdown -->
+        <div
+          id="cart-dropdown"
+          class="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] rounded-t-2xl border-t border-ink/12
+                 translate-y-full opacity-0 pointer-events-none
+                 transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
+                 sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-full sm:mt-7 sm:w-[360px] sm:max-h-none sm:rounded-card sm:border
+                 sm:translate-y-2 sm:scale-[0.98]
+                 bg-surface shadow-card-hover overflow-hidden flex flex-col"
+        >
+          <!-- Mobile drag indicator -->
+          <div class="flex justify-center pt-2.5 pb-0 sm:hidden">
+            <div class="w-10 h-1 rounded-full bg-ink/15"></div>
+          </div>
+          <div class="px-4 pt-3 sm:pt-4 pb-3 border-b border-ink/12 flex items-center justify-between">
+            <h3 class="font-heading font-bold text-base sm:text-sm">
+              Your Cart&nbsp;(<span id="cart-dropdown-count">0</span>)
+            </h3>
+            <button id="cart-dropdown-close" class="text-ink/40 hover:text-ink transition-colors" aria-label="Close cart">
+              <X size={16} />
+            </button>
+          </div>
+
+          <div id="cart-dropdown-items" class="flex-1 overflow-y-auto sm:max-h-[280px]"></div>
+
+          <div id="cart-dropdown-empty" class="py-10 text-center text-sm text-ink/45">
+            Your cart is empty
+          </div>
+
+          <div id="cart-dropdown-footer" class="hidden p-4 border-t border-ink/12">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm text-ink/60">Subtotal</span>
+              <span id="cart-dropdown-total" class="font-heading font-bold text-lg">$0</span>
+            </div>
+            <a
+              href="/cart"
+              class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] w-full text-sm px-5 py-3 transition-all"
+            >
+              View Cart &amp; Checkout
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <a
+        href="/contact"
+        class="inline-flex items-center justify-center size-10 text-ink hover:text-accent transition-colors"
+        aria-label="Contact"
+      >
+        <Contact size={22} />
+      </a>
+
+      <!-- Mobile menu toggle -->
+      <button
+        id="mobile-menu-toggle"
+        class="lg:hidden inline-flex items-center justify-center size-10 text-ink hover:text-accent transition-colors"
+        aria-label="Toggle menu"
+      >
+        <Menu size={24} />
+      </button>
+    </div>
+  </div>
+
+  <!-- Shop Mega Menu (positioned relative to header, below border) -->
+  <div
+    id="shop-dropdown"
+    class="hidden lg:block absolute top-full left-0 right-0 z-40
+           opacity-0 -translate-y-2 pointer-events-none
+           transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+  >
+    <div class="bg-surface border-b border-ink/12 shadow-card-hover">
+      <div class="container-main py-6">
+        <div class="grid grid-cols-12 gap-8">
+          <!-- Categories -->
+          <div class="col-span-4">
+            <p class="text-xs font-semibold text-ink/40 uppercase tracking-wider mb-3">Categories</p>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+              {shopCategories.map((cat) => (
+                <a
+                  href={cat.href}
+                  class="shop-category-link flex items-center gap-2 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all duration-150"
+                >
+                  {cat.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Featured / Promo -->
+          <div class="col-span-5">
+            <p class="text-xs font-semibold text-ink/40 uppercase tracking-wider mb-3">Featured</p>
+            <div class="grid grid-cols-2 gap-4" id="shop-featured-grid">
+              <a href="/product/curiosity-starter" class="group">
+                <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 mb-2 overflow-hidden">
+                  <img src="https://placehold.co/400" alt="Curiosity Starter" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
+                </div>
+                <p class="text-sm font-medium text-ink group-hover:text-accent transition-colors">Curiosity Starter</p>
+                <p class="text-xs text-ink/50 mt-0.5">From $49</p>
+              </a>
+              <a href="/product/solo-night-essentials" class="group">
+                <div class="aspect-[4/3] rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 mb-2 overflow-hidden">
+                  <img src="https://placehold.co/400" alt="Solo Night Essentials" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300" />
+                </div>
+                <p class="text-sm font-medium text-ink group-hover:text-accent transition-colors">Solo Night Essentials</p>
+                <p class="text-xs text-ink/50 mt-0.5">From $79</p>
+              </a>
+            </div>
+          </div>
+
+          <!-- Quick links -->
+          <div class="col-span-3">
+            <p class="text-xs font-semibold text-ink/40 uppercase tracking-wider mb-3">Quick Links</p>
+            <div class="flex flex-col gap-1">
+              <a href="/shop" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+                <span class="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-ink/30 shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </span>
+                View All Products
+              </a>
+              <a href="/new" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+                <span class="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-ink/30 shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </span>
+                New Arrivals
+              </a>
+              <a href="/sale" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+                <span class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                </span>
+                On Sale
+              </a>
+              <a href="/brands" class="flex items-center gap-2.5 px-3 py-2.5 text-sm text-ink/70 hover:text-accent hover:bg-ink/[0.03] rounded-lg transition-all">
+                <span class="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-ink/30 shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                Brands
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Drawer -->
+  <div
+    id="mobile-menu"
+    class="fixed inset-0 z-[60] hidden"
+  >
+    <div id="mobile-menu-overlay" class="absolute inset-0 bg-ink/50"></div>
+    <div
+      id="mobile-menu-drawer"
+      class="absolute left-0 top-0 h-full w-80 bg-surface shadow-xl transform -translate-x-full transition-transform duration-300 ease-smooth flex flex-col"
+    >
+      <div class="flex items-center justify-between px-4 py-4 border-b border-ink/12">
+        <img src="/sexlogo.png" alt="sexbox.shop" class="h-7" />
+        <button id="mobile-menu-close" class="inline-flex items-center justify-center size-10 text-ink" aria-label="Close menu">
+          <X size={22} />
+        </button>
+      </div>
+      <nav class="p-4 flex flex-col gap-1">
+        {navLinks.map((link) => (
+          <a
+            href={link.href}
+            class="flex items-center justify-between py-3 px-2 text-base font-medium text-ink hover:bg-ink/5 rounded-lg transition-colors"
+          >
+            {link.label}
+            {link.hasDropdown && <ChevronDown size={16} class="opacity-40" />}
+          </a>
+        ))}
+      </nav>
+      <div class="p-4 border-t border-ink/12 flex flex-col flex-1 min-h-0">
+        <div class="relative shrink-0">
+          <Search size={18} class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/45" />
+          <input
+            id="mobile-search-input"
+            type="text"
+            placeholder="Search for products..."
+            class="w-full bg-muted rounded-full py-2.5 pl-10 pr-10 text-sm placeholder:text-ink/45 focus:outline-none focus:ring-2 focus:ring-accent/30"
+            autocomplete="off"
+          />
+          <button
+            id="mobile-search-clear"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/30 hover:text-ink/60 transition-colors hidden"
+            aria-label="Clear search"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        <!-- Mobile Search Results (inline in drawer) -->
+        <div id="mobile-search-results" class="mt-3 flex-1 overflow-y-auto hidden">
+          <div id="mobile-search-list"></div>
+          <div id="mobile-search-empty" class="hidden py-6 text-center text-sm text-ink/45">
+            No products found
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Shop Mega Menu Script -->
+<script>
+  const shopTrigger = document.getElementById("shop-dropdown-trigger");
+  const shopDropdown = document.getElementById("shop-dropdown");
+  const shopChevron = document.getElementById("shop-chevron");
+
+  let shopCloseTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  function openShopMenu() {
+    if (shopCloseTimeout) {
+      clearTimeout(shopCloseTimeout);
+      shopCloseTimeout = null;
+    }
+    shopDropdown?.classList.remove("opacity-0", "-translate-y-2", "pointer-events-none");
+    shopDropdown?.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+    shopChevron?.classList.add("rotate-180");
+  }
+
+  function closeShopMenu() {
+    shopCloseTimeout = setTimeout(() => {
+      shopDropdown?.classList.add("opacity-0", "-translate-y-2", "pointer-events-none");
+      shopDropdown?.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
+      shopChevron?.classList.remove("rotate-180");
+    }, 150);
+  }
+
+  // Hover on trigger opens, hover on dropdown keeps it open
+  shopTrigger?.addEventListener("mouseenter", openShopMenu);
+  shopTrigger?.addEventListener("mouseleave", closeShopMenu);
+  shopDropdown?.addEventListener("mouseenter", () => {
+    if (shopCloseTimeout) {
+      clearTimeout(shopCloseTimeout);
+      shopCloseTimeout = null;
+    }
+  });
+  shopDropdown?.addEventListener("mouseleave", closeShopMenu);
+</script>
+
+<!-- Mobile Menu Script -->
+<script>
+  const toggle = document.getElementById("mobile-menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  const overlay = document.getElementById("mobile-menu-overlay");
+  const close = document.getElementById("mobile-menu-close");
+  const drawer = document.getElementById("mobile-menu-drawer");
+
+  function openMenu() {
+    menu?.classList.remove("hidden");
+    requestAnimationFrame(() => {
+      drawer?.classList.remove("-translate-x-full");
+    });
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    drawer?.classList.add("-translate-x-full");
+    setTimeout(() => {
+      menu?.classList.add("hidden");
+    }, 300);
+    document.body.style.overflow = "";
+  }
+
+  toggle?.addEventListener("click", openMenu);
+  close?.addEventListener("click", closeMenu);
+  overlay?.addEventListener("click", closeMenu);
+</script>
+
+<!-- Cart Dropdown Script -->
+<script>
+  import { getCart, removeFromCart, getCartCount, getCartTotal } from "../../lib/cart";
+
+  const badge = document.getElementById("cart-badge") as HTMLElement;
+  const toggleBtn = document.getElementById("cart-toggle") as HTMLElement;
+  const dropdown = document.getElementById("cart-dropdown") as HTMLElement;
+  const backdrop = document.getElementById("cart-backdrop") as HTMLElement;
+  const closeBtn = document.getElementById("cart-dropdown-close") as HTMLElement;
+  const itemsContainer = document.getElementById("cart-dropdown-items") as HTMLElement;
+  const emptyState = document.getElementById("cart-dropdown-empty") as HTMLElement;
+  const footer = document.getElementById("cart-dropdown-footer") as HTMLElement;
+  const countSpan = document.getElementById("cart-dropdown-count") as HTMLElement;
+  const totalSpan = document.getElementById("cart-dropdown-total") as HTMLElement;
+
+  function openCart() {
+    renderDropdown();
+    // Mobile: slide up from bottom, Desktop: fade + drop in
+    dropdown.classList.remove("translate-y-full", "sm:translate-y-2", "sm:scale-[0.98]", "opacity-0", "pointer-events-none");
+    dropdown.classList.add("translate-y-0", "sm:translate-y-0", "sm:scale-100", "opacity-100", "pointer-events-auto");
+    // Backdrop fade in
+    backdrop?.classList.remove("opacity-0", "pointer-events-none");
+    backdrop?.classList.add("opacity-100", "pointer-events-auto");
+    toggleBtn.setAttribute("aria-expanded", "true");
+    if (window.innerWidth < 640) document.body.style.overflow = "hidden";
+  }
+
+  function closeCart() {
+    dropdown.classList.add("translate-y-full", "sm:translate-y-2", "sm:scale-[0.98]", "opacity-0", "pointer-events-none");
+    dropdown.classList.remove("translate-y-0", "sm:translate-y-0", "sm:scale-100", "opacity-100", "pointer-events-auto");
+    backdrop?.classList.add("opacity-0", "pointer-events-none");
+    backdrop?.classList.remove("opacity-100", "pointer-events-auto");
+    toggleBtn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  }
+
+  function renderDropdown() {
+    const cart = getCart();
+    const count = getCartCount();
+    const total = getCartTotal();
+
+    if (count > 0) {
+      badge.textContent = String(count);
+      badge.classList.remove("hidden");
+      badge.classList.add("flex");
+    } else {
+      badge.classList.add("hidden");
+      badge.classList.remove("flex");
+    }
+
+    countSpan.textContent = String(count);
+    totalSpan.textContent = `$${total}`;
+
+    if (cart.length === 0) {
+      itemsContainer.innerHTML = "";
+      emptyState.classList.remove("hidden");
+      footer.classList.add("hidden");
+      return;
+    }
+
+    emptyState.classList.add("hidden");
+    footer.classList.remove("hidden");
+
+    itemsContainer.innerHTML = cart
+      .map((item) => {
+        const details = [
+          item.selectedSize ? `Size: ${item.selectedSize}` : "",
+          item.selectedColor ? `Color: ${item.selectedColor}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+        return `
+        <div class="flex gap-3 p-4 border-b border-ink/12 last:border-b-0">
+          <div class="w-14 h-14 bg-muted rounded-lg overflow-hidden shrink-0">
+            <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-ink truncate">${item.title}</p>
+            ${details ? `<p class="text-xs text-ink/45 mt-0.5">${details}</p>` : ""}
+            <div class="flex items-center justify-between mt-1.5">
+              <span class="text-sm font-heading font-bold">$${item.price}</span>
+              <span class="text-xs text-ink/45">Qty: ${item.quantity}</span>
+            </div>
+          </div>
+          <button
+            class="text-ink/30 hover:text-accent transition-colors shrink-0 self-start mt-0.5"
+            data-remove-id="${item.id}"
+            data-remove-size="${item.selectedSize ?? ""}"
+            data-remove-color="${item.selectedColor ?? ""}"
+            aria-label="Remove ${item.title}"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`;
+      })
+      .join("");
+
+    itemsContainer.querySelectorAll("[data-remove-id]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const el = btn as HTMLElement;
+        removeFromCart(
+          el.dataset.removeId!,
+          el.dataset.removeSize || undefined,
+          el.dataset.removeColor || undefined,
+        );
+      });
+    });
+  }
+
+  toggleBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = dropdown.classList.contains("pointer-events-auto");
+    if (isOpen) {
+      closeCart();
+    } else {
+      openCart();
+    }
+  });
+
+  closeBtn?.addEventListener("click", closeCart);
+  backdrop?.addEventListener("click", closeCart);
+
+  document.addEventListener("click", (e) => {
+    const widget = document.getElementById("cart-widget");
+    if (widget && !widget.contains(e.target as Node)) {
+      closeCart();
+    }
+  });
+
+  window.addEventListener("cart-updated", () => {
+    renderDropdown();
+  });
+
+  renderDropdown();
+</script>
+
+<!-- Search Script -->
+<script>
+  import { allPackages } from "../../data/products";
+  import type { Product } from "../../data/products";
+
+  // --- Elements ---
+  const desktopInput = document.getElementById("desktop-search-input") as HTMLInputElement;
+  const desktopClear = document.getElementById("desktop-search-clear") as HTMLElement;
+  const desktopResults = document.getElementById("desktop-search-results") as HTMLElement;
+  const desktopList = document.getElementById("desktop-search-list") as HTMLElement;
+  const desktopEmpty = document.getElementById("desktop-search-empty") as HTMLElement;
+  const desktopHint = document.getElementById("desktop-search-hint") as HTMLElement;
+  const desktopWrapper = document.getElementById("desktop-search-wrapper") as HTMLElement;
+
+  const mobileInput = document.getElementById("mobile-search-input") as HTMLInputElement;
+  const mobileClear = document.getElementById("mobile-search-clear") as HTMLElement;
+  const mobileResults = document.getElementById("mobile-search-results") as HTMLElement;
+  const mobileList = document.getElementById("mobile-search-list") as HTMLElement;
+  const mobileEmpty = document.getElementById("mobile-search-empty") as HTMLElement;
+
+  // --- Search logic ---
+  function searchProducts(query: string): Product[] {
+    const q = query.toLowerCase().trim();
+    if (!q) return [];
+    return allPackages.filter((p) =>
+      p.title.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      (p.shortDescription?.toLowerCase().includes(q)) ||
+      (p.tag?.toLowerCase().includes(q)) ||
+      (p.includes?.some(item => item.toLowerCase().includes(q)))
+    );
+  }
+
+  function renderResultCard(product: Product, showBadge: boolean = true): string {
+    const saleHtml = product.originalPrice
+      ? `<span class="text-xs text-ink/40 line-through">$${product.originalPrice}</span>`
+      : "";
+    const tagHtml = showBadge && product.tag
+      ? `<span class="inline-block text-[10px] font-medium bg-accent/10 text-accent px-1.5 py-0.5 rounded-full">${product.tag}</span>`
+      : "";
+
+    return `
+      <a href="/product/${product.slug}" class="search-result-item flex gap-3 px-4 py-3 hover:bg-ink/[0.03] transition-colors">
+        <div class="w-12 h-12 bg-muted rounded-lg overflow-hidden shrink-0">
+          <img src="${product.image}" alt="${product.title}" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <p class="text-sm font-medium text-ink truncate">${product.title}</p>
+            ${tagHtml}
+          </div>
+          <p class="text-xs text-ink/50 mt-0.5">${product.category}</p>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span class="text-sm font-heading font-bold">$${product.price}</span>
+            ${saleHtml}
+          </div>
+        </div>
+      </a>`;
+  }
+
+  // --- Desktop dropdown open/close ---
+  function openDesktopResults() {
+    desktopResults.classList.remove("opacity-0", "translate-y-2", "scale-[0.98]", "pointer-events-none");
+    desktopResults.classList.add("opacity-100", "translate-y-0", "scale-100", "pointer-events-auto");
+  }
+
+  function closeDesktopResults() {
+    desktopResults.classList.add("opacity-0", "translate-y-2", "scale-[0.98]", "pointer-events-none");
+    desktopResults.classList.remove("opacity-100", "translate-y-0", "scale-100", "pointer-events-auto");
+  }
+
+  // --- Render helpers ---
+  function renderDesktop(query: string) {
+    const q = query.trim();
+    desktopClear.classList.toggle("hidden", q.length === 0);
+
+    if (q.length === 0) {
+      closeDesktopResults();
+      return;
+    }
+
+    const results = searchProducts(q);
+
+    desktopList.innerHTML = "";
+    desktopEmpty.classList.add("hidden");
+    desktopHint.classList.add("hidden");
+
+    if (results.length > 0) {
+      desktopList.innerHTML = results.map(renderResultCard).join("")
+        + `<a href="/shop" class="block px-4 py-3 text-center text-sm font-medium text-accent hover:bg-ink/[0.03] border-t border-ink/8 transition-colors">View all products</a>`;
+    } else {
+      desktopEmpty.classList.remove("hidden");
+    }
+
+    openDesktopResults();
+  }
+
+  function renderMobile(query: string) {
+    const q = query.trim();
+    mobileClear.classList.toggle("hidden", q.length === 0);
+
+    if (q.length === 0) {
+      mobileResults.classList.add("hidden");
+      return;
+    }
+
+    const results = searchProducts(q);
+
+    mobileList.innerHTML = "";
+    mobileEmpty.classList.add("hidden");
+    mobileResults.classList.remove("hidden");
+
+    if (results.length > 0) {
+      mobileList.innerHTML = results.map(p => renderResultCard(p, false)).join("")
+        + `<a href="/shop" class="block px-4 py-3 text-center text-sm font-medium text-accent hover:bg-ink/[0.03] border-t border-ink/8 transition-colors">View all products</a>`;
+    } else {
+      mobileEmpty.classList.remove("hidden");
+    }
+  }
+
+  // --- Debounce ---
+  let desktopTimer: ReturnType<typeof setTimeout>;
+  let mobileTimer: ReturnType<typeof setTimeout>;
+
+  desktopInput?.addEventListener("input", () => {
+    clearTimeout(desktopTimer);
+    desktopTimer = setTimeout(() => renderDesktop(desktopInput.value), 150);
+  });
+
+  desktopInput?.addEventListener("focus", () => {
+    if (desktopInput.value.trim().length > 0) {
+      renderDesktop(desktopInput.value);
+    }
+  });
+
+  mobileInput?.addEventListener("input", () => {
+    clearTimeout(mobileTimer);
+    mobileTimer = setTimeout(() => renderMobile(mobileInput.value), 150);
+  });
+
+  // --- Clear buttons ---
+  desktopClear?.addEventListener("click", () => {
+    desktopInput.value = "";
+    desktopClear.classList.add("hidden");
+    closeDesktopResults();
+    desktopInput.focus();
+  });
+
+  mobileClear?.addEventListener("click", () => {
+    mobileInput.value = "";
+    mobileClear.classList.add("hidden");
+    mobileResults.classList.add("hidden");
+    mobileInput.focus();
+  });
+
+  // --- Close desktop results on outside click ---
+  document.addEventListener("click", (e) => {
+    if (desktopWrapper && !desktopWrapper.contains(e.target as Node)) {
+      closeDesktopResults();
+    }
+  });
+
+  // --- Keyboard: Escape to close ---
+  desktopInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDesktopResults();
+      desktopInput.blur();
+    }
+  });
+</script>

@@ -1,0 +1,377 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Breadcrumb from "../../components/ui/Breadcrumb.astro";
+import StarRating from "../../components/ui/StarRating.astro";
+import Button from "../../components/ui/Button.astro";
+import ProductCard from "../../components/ui/ProductCard.astro";
+import SectionHeading from "../../components/ui/SectionHeading.astro";
+import { CircleCheckBig, SlidersHorizontal, ChevronDown, Minus, Plus, Package, Truck, Shield, Check } from "@lucide/astro";
+import { getProductBySlug, getAllProductSlugs, allPackages } from "../../data/products";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return getAllProductSlugs().map((slug) => ({ params: { slug } }));
+}
+
+const slug = Astro.params.slug!;
+const product = getProductBySlug(slug);
+if (!product) {
+  return Astro.redirect("/");
+}
+
+const hasReviews = "reviews" in product && product.reviews && product.reviews.length > 0;
+const relatedProducts = allPackages.filter((p) => p.slug !== slug && p.category === product.category).slice(0, 4);
+const moreRelated = relatedProducts.length < 4 
+  ? [...relatedProducts, ...allPackages.filter(p => p.slug !== slug && !relatedProducts.includes(p)).slice(0, 4 - relatedProducts.length)]
+  : relatedProducts;
+
+const tabs = ["What's Included", "Rating & Reviews"];
+---
+
+<Layout title={`${product.title} — sexbox.shop`}>
+  <div class="container-main py-4 sm:py-6 lg:py-8">
+    <Breadcrumb
+      items={[
+        { label: "Home", href: "/" },
+        { label: "Shop", href: "/shop" },
+        { label: product.category, href: `/shop?category=${product.category.toLowerCase()}` },
+      ]}
+    />
+
+    <!-- Product Detail -->
+    <div class="flex flex-col lg:flex-row gap-6 lg:gap-10 mb-12 sm:mb-16 mt-4">
+      <!-- Image Gallery -->
+      <div class="flex-1 flex flex-col-reverse lg:flex-row gap-3">
+        <!-- Thumbnails -->
+        <div class="grid grid-cols-3 lg:grid-cols-1 lg:flex lg:flex-col gap-3 w-full lg:w-auto lg:overflow-visible">
+          {(product.images || [product.image, product.image, product.image]).map((img, i) => (
+            <button
+              class:list={[
+                "thumb-btn aspect-square w-full lg:w-[90px] lg:h-[90px] rounded-xl overflow-hidden border-2 shrink-0 transition-colors",
+                i === 0 ? "border-ink" : "border-transparent hover:border-ink/20",
+              ]}
+              data-index={i}
+            >
+              <img src={img} alt={`${product.title} view ${i + 1}`} class="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+        <!-- Main Image -->
+        <div class="flex-1 bg-muted rounded-card aspect-square lg:aspect-auto lg:min-h-[500px] flex items-center justify-center overflow-hidden relative">
+          <img
+            id="main-image"
+            src={product.image}
+            alt={product.title}
+            class="w-full h-full object-cover"
+          />
+          <!-- Badges -->
+          {product.tag && (
+            <span class="absolute top-4 left-4 bg-ink text-surface text-xs font-medium px-3 py-1.5 rounded-full">
+              {product.tag}
+            </span>
+          )}
+          {product.itemCount && (
+            <span class="absolute bottom-4 left-4 bg-surface/95 backdrop-blur-sm text-ink text-sm font-medium px-3 py-1.5 rounded-full shadow-sm">
+              {product.itemCount} items included
+            </span>
+          )}
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="flex-1 lg:max-w-md" id="product-info">
+        <!-- Category badge -->
+        <span class="inline-block text-xs font-medium text-accent uppercase tracking-wider mb-2">
+          {product.category} Package
+        </span>
+
+        <h1 class="font-heading text-2xl sm:text-3xl lg:text-[40px] font-bold text-ink leading-tight mb-3">
+          {product.title}
+        </h1>
+
+        <StarRating rating={product.rating} size={20} showValue class="mb-3" />
+
+        <div class="flex items-center gap-3 mb-4">
+          <span class="font-heading text-2xl sm:text-3xl font-bold text-ink">${product.price}</span>
+          {product.originalPrice && (
+            <span class="font-heading text-2xl sm:text-3xl font-bold text-ink/45 line-through">${product.originalPrice}</span>
+          )}
+          {product.originalPrice && (
+            <span class="bg-accent/10 text-accent text-xs font-medium px-3 py-1 rounded-full">
+              Save ${product.originalPrice - product.price}
+            </span>
+          )}
+        </div>
+
+        <p class="text-sm text-ink/60 leading-relaxed mb-6 pb-6 border-b border-ink/12">
+          {product.description ??
+            "Premium quality, discreet packaging, and curated for your comfort. Add to cart to make it yours."}
+        </p>
+
+        <!-- What's Included Preview -->
+        {product.includes && (
+          <div class="mb-6 pb-6 border-b border-ink/12">
+            <span class="text-sm font-medium text-ink mb-3 block">This package includes:</span>
+            <ul class="space-y-2">
+              {product.includes.slice(0, 4).map((item) => (
+                <li class="flex items-start gap-2 text-sm text-ink/70">
+                  <Check size={16} class="text-accent shrink-0 mt-0.5" />
+                  <span>{item}</span>
+                </li>
+              ))}
+              {product.includes.length > 4 && (
+                <li class="text-sm text-accent font-medium">
+                  + {product.includes.length - 4} more items
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        <!-- Actions -->
+        <div class="flex items-center gap-4 mb-6">
+          <button
+            id="add-to-cart-btn"
+            class="inline-flex flex-1 items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-base px-10 py-4 transition-all"
+          >
+            Add to Cart
+          </button>
+          <div class="inline-flex items-center bg-muted rounded-full" id="pdp-qty">
+            <button
+              class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink hover:text-accent transition-colors"
+              aria-label="Decrease quantity"
+              id="pdp-qty-dec"
+            >
+              <Minus size={16} />
+            </button>
+            <span class="w-8 text-center text-sm font-medium" id="pdp-qty-value">1</span>
+            <button
+              class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink hover:text-accent transition-colors"
+              aria-label="Increase quantity"
+              id="pdp-qty-inc"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="grid grid-cols-3 gap-3 pt-6 border-t border-ink/12">
+          <div class="text-center">
+            <Package size={20} class="mx-auto mb-1.5 text-ink/60" />
+            <span class="text-xs text-ink/60 block">Discreet</span>
+            <span class="text-xs text-ink/60">Packaging</span>
+          </div>
+          <div class="text-center">
+            <Truck size={20} class="mx-auto mb-1.5 text-ink/60" />
+            <span class="text-xs text-ink/60 block">Free Shipping</span>
+            <span class="text-xs text-ink/60">Over $75</span>
+          </div>
+          <div class="text-center">
+            <Shield size={20} class="mx-auto mb-1.5 text-ink/60" />
+            <span class="text-xs text-ink/60 block">Body-Safe</span>
+            <span class="text-xs text-ink/60">Materials</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-ink/12 mb-8">
+      <div class="flex">
+        {tabs.map((tab, i) => (
+          <button
+            class:list={[
+              "tab-btn flex-1 text-center py-4 text-sm sm:text-base font-medium transition-colors border-b-2",
+              i === 0
+                ? "text-ink border-ink active"
+                : "text-ink/45 border-transparent hover:text-ink",
+            ]}
+            data-tab={i}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Tab Content Container -->
+    <div id="tab-container" class="relative mb-12 sm:mb-16">
+      <!-- Tab Content: What's Included -->
+      <div id="tab-0" class="tab-content">
+        {product.includes ? (
+          <div>
+            <h3 class="font-heading text-xl sm:text-2xl font-bold mb-6">Everything in your {product.title}</h3>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {product.includes.map((item, i) => (
+                <div class="flex items-start gap-3 p-4 bg-muted/50 rounded-xl">
+                  <span class="w-6 h-6 bg-ink text-surface rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                    {i + 1}
+                  </span>
+                  <span class="text-sm text-ink">{item}</span>
+                </div>
+              ))}
+            </div>
+            <p class="text-sm text-ink/60 mt-6">
+              All items are carefully selected, body-safe, and come with discreet packaging. Specific items may vary slightly based on availability but quality is always guaranteed.
+            </p>
+          </div>
+        ) : (
+          <p class="text-ink/60">Detailed contents will be revealed upon delivery for a surprise experience.</p>
+        )}
+      </div>
+
+      <!-- Tab Content: Reviews Section -->
+      <div id="tab-1" class="tab-content hidden">
+        {hasReviews && product.reviews ? (
+          <>
+            <div class="flex items-center justify-between mb-6 sm:mb-8">
+              <h3 class="font-heading text-xl sm:text-2xl font-bold">
+                All Reviews <span class="text-ink/45 font-normal text-base">({product.reviewCount})</span>
+              </h3>
+              <div class="flex items-center gap-2">
+                <button class="hidden sm:flex w-10 h-10 items-center justify-center rounded-full bg-muted hover:bg-ink/10 transition-colors">
+                  <SlidersHorizontal size={16} />
+                </button>
+                <button class="hidden sm:flex items-center gap-2 bg-muted rounded-full px-4 py-2.5 text-sm font-medium hover:bg-ink/10 transition-colors">
+                  Latest <ChevronDown size={14} />
+                </button>
+                <Button variant="primary" size="sm">Write a Review</Button>
+              </div>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4 sm:gap-5">
+              {product.reviews.map((review) => (
+                <div class="border border-ink/12 rounded-card p-5 sm:p-6">
+                  <StarRating rating={review.rating} size={16} class="mb-3" />
+                  <div class="flex items-center gap-1.5 mb-2">
+                    <span class="font-heading font-bold text-base">{review.author}</span>
+                    {review.verified && <CircleCheckBig size={16} class="text-accent-dark" />}
+                  </div>
+                  <p class="text-sm text-ink/60 leading-relaxed mb-3">
+                    &ldquo;{review.text}&rdquo;
+                  </p>
+                  <span class="text-xs text-ink/45">Posted on {review.date}</span>
+                </div>
+              ))}
+            </div>
+
+            <div class="text-center mt-8">
+              <Button variant="outline">Load More Reviews</Button>
+            </div>
+          </>
+        ) : (
+          <div class="text-center py-12">
+            <p class="text-ink/60 mb-4">No reviews yet. Be the first to share your experience!</p>
+            <Button variant="primary">Write a Review</Button>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- You Might Also Like -->
+    <SectionHeading class="mb-8 sm:mb-10">You Might Also Like</SectionHeading>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 mb-12">
+      {moreRelated.map((p) => (
+        <ProductCard product={p} />
+      ))}
+    </div>
+  </div>
+
+  <!-- Product data for client script -->
+  <script
+    id="product-json"
+    type="application/json"
+    set:html={JSON.stringify({
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      category: product.category,
+      price: product.price,
+      image: product.image,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+    })}
+  />
+</Layout>
+
+<script>
+  import { addToCart } from "../../lib/cart";
+
+  const raw = document.getElementById("product-json")?.textContent;
+  if (!raw) throw new Error("Missing product data");
+  const product = JSON.parse(raw);
+
+  let quantity = 1;
+
+  // Quantity controls
+  const qtyDec = document.getElementById("pdp-qty-dec");
+  const qtyInc = document.getElementById("pdp-qty-inc");
+  const qtyVal = document.getElementById("pdp-qty-value");
+
+  qtyDec?.addEventListener("click", () => {
+    quantity = Math.max(1, quantity - 1);
+    if (qtyVal) qtyVal.textContent = String(quantity);
+  });
+  qtyInc?.addEventListener("click", () => {
+    quantity++;
+    if (qtyVal) qtyVal.textContent = String(quantity);
+  });
+
+  // Tab switching
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tabIndex = (btn as HTMLElement).dataset.tab;
+
+      document.querySelectorAll(".tab-btn").forEach((b) => {
+        b.classList.remove("text-ink", "border-ink", "active");
+        b.classList.add("text-ink/45", "border-transparent");
+      });
+      btn.classList.add("text-ink", "border-ink", "active");
+      btn.classList.remove("text-ink/45", "border-transparent");
+
+      document.querySelectorAll(".tab-content").forEach((content) => {
+        content.classList.add("hidden");
+      });
+      const newTab = document.getElementById(`tab-${tabIndex}`);
+      newTab?.classList.remove("hidden");
+    });
+  });
+
+  // Thumbnail gallery
+  document.querySelectorAll(".thumb-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".thumb-btn").forEach((b) => {
+        b.classList.remove("border-ink");
+        b.classList.add("border-transparent");
+      });
+      btn.classList.add("border-ink");
+      btn.classList.remove("border-transparent");
+
+      const img = btn.querySelector("img") as HTMLImageElement;
+      const mainImg = document.getElementById("main-image") as HTMLImageElement;
+      if (img && mainImg) {
+        mainImg.src = img.src;
+      }
+    });
+  });
+
+  // Add to Cart
+  const addBtn = document.getElementById("add-to-cart-btn");
+
+  addBtn?.addEventListener("click", () => {
+    addToCart({
+      id: product.id,
+      slug: product.slug,
+      title: product.title,
+      category: product.category,
+      price: product.price,
+      image: product.image,
+      quantity,
+    });
+
+    quantity = 1;
+    if (qtyVal) qtyVal.textContent = "1";
+  });
+</script>

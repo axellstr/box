@@ -1,0 +1,49 @@
+---
+import { Minus, Plus } from "@lucide/astro";
+
+interface Props {
+  value?: number;
+  class?: string;
+}
+
+const { value = 1, class: className = "" } = Astro.props;
+---
+
+<div class:list={["inline-flex items-center bg-muted rounded-full", className]}>
+  <button
+    class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink hover:text-accent transition-colors"
+    aria-label="Decrease quantity"
+    data-qty-dec
+  >
+    <Minus size={16} />
+  </button>
+  <span class="w-8 text-center text-sm font-medium" data-qty-value>{value}</span>
+  <button
+    class="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink hover:text-accent transition-colors"
+    aria-label="Increase quantity"
+    data-qty-inc
+  >
+    <Plus size={16} />
+  </button>
+</div>
+
+<script>
+  document.querySelectorAll("[data-qty-dec]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const display = btn.parentElement?.querySelector("[data-qty-value]");
+      if (display) {
+        const val = Math.max(1, parseInt(display.textContent || "1") - 1);
+        display.textContent = String(val);
+      }
+    });
+  });
+  document.querySelectorAll("[data-qty-inc]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const display = btn.parentElement?.querySelector("[data-qty-value]");
+      if (display) {
+        const val = parseInt(display.textContent || "1") + 1;
+        display.textContent = String(val);
+      }
+    });
+  });
+</script>

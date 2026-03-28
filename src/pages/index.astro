@@ -1,0 +1,26 @@
+---
+export const prerender = true;
+
+import Layout from "../layouts/Layout.astro";
+import Hero from "../components/sections/Hero.astro";
+import BrandTicker from "../components/sections/BrandTicker.astro";
+import ProductGrid from "../components/sections/ProductGrid.astro";
+import CategoryBrowse from "../components/sections/CategoryBrowse.astro";
+import Testimonials from "../components/sections/Testimonials.astro";
+import { allPackages } from "../data/products";
+
+const featuredPackages = allPackages.slice(0, 4);
+const popularPackages = allPackages.filter(p => p.isBestseller || p.isSale).slice(0, 4);
+---
+
+<Layout>
+  <div class="flex min-h-[100dvh] flex-1 flex-col">
+    <Hero />
+    <BrandTicker />
+  </div>
+  <ProductGrid title="Featured Packages" products={featuredPackages} viewAllHref="/shop" />
+  <hr class="border-ink/12 mx-4 lg:mx-auto lg:max-w-[1240px]" />
+  <ProductGrid title="Most Popular" products={popularPackages} viewAllHref="/shop" />
+  <CategoryBrowse />
+  <Testimonials />
+</Layout>

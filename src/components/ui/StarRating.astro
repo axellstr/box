@@ -1,0 +1,44 @@
+---
+interface Props {
+  rating: number;
+  maxRating?: number;
+  size?: number;
+  showValue?: boolean;
+  class?: string;
+}
+
+const { rating, maxRating = 5, size = 16, showValue = false, class: className = "" } = Astro.props;
+
+const fullStars = Math.floor(rating);
+const hasHalf = rating % 1 >= 0.25 && rating % 1 < 0.75;
+const emptyStars = maxRating - fullStars - (hasHalf ? 1 : 0);
+---
+
+<div class:list={["flex items-center gap-1", className]}>
+  {Array.from({ length: fullStars }).map(() => (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="#FFC633">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+    </svg>
+  ))}
+  {hasHalf && (
+    <svg width={size} height={size} viewBox="0 0 20 20">
+      <defs>
+        <linearGradient id={`half-${rating}`}>
+          <stop offset="50%" stop-color="#FFC633" />
+          <stop offset="50%" stop-color="#D4D4D4" />
+        </linearGradient>
+      </defs>
+      <path fill={`url(#half-${rating})`} d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+    </svg>
+  )}
+  {Array.from({ length: emptyStars }).map(() => (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="#D4D4D4">
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+    </svg>
+  ))}
+  {showValue && (
+    <span class="text-sm text-ink ml-1">
+      {rating}<span class="text-ink/45">/{maxRating}</span>
+    </span>
+  )}
+</div>

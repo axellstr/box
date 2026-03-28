@@ -1,0 +1,40 @@
+---
+export const prerender = true;
+
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Order Confirmed — sexbox.shop">
+  <div class="container-main py-16 sm:py-24 text-center">
+    <div class="mx-auto max-w-md">
+      <div class="mx-auto mb-6 w-20 h-20 bg-accent-dark/10 rounded-full flex items-center justify-center">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent-dark">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+
+      <h1 class="font-heading text-3xl sm:text-4xl font-bold text-ink uppercase mb-4">
+        Thank you!
+      </h1>
+
+      <p class="text-ink/60 leading-relaxed mb-2">
+        Your order has been confirmed and is being processed.
+      </p>
+      <p class="text-ink/60 leading-relaxed mb-8">
+        You'll receive an email confirmation with your order details and tracking information shortly. Everything ships in discreet packaging.
+      </p>
+
+      <a
+        href="/"
+        class="inline-flex items-center justify-center font-medium rounded-button bg-ink text-surface hover:bg-ink/85 active:scale-[0.98] text-base px-10 py-4 transition-all"
+      >
+        Continue Shopping
+      </a>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { clearCart } from "../../lib/cart";
+  clearCart();
+</script>

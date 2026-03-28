@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/alex/box/src/pages -type f -name *.astro)",
+      "Bash(grep -r og: /home/alex/box/src --include=*.astro)",
+      "Bash(grep -r twitter: /home/alex/box/src --include=*.astro)",
+      "Bash(find /home/alex/box/src -name \"*.astro\" -exec grep -l \"aria-label\\\\|role=\" {})",
+      "Bash(find /home/alex/box/src -name \"*.astro\" -exec grep -l \"img\\\\|image\" {})",
+      "Bash(grep:*)"
+    ]
+  }
+}
