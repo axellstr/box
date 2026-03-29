@@ -25,7 +25,13 @@ import { X } from "@lucide/astro";
 <script>
   const btn = document.getElementById("close-announcement");
   const bar = document.getElementById("announcement-bar");
+
+  if (localStorage.getItem("announcement-closed") === "1") {
+    bar?.classList.add("hidden");
+  }
+
   btn?.addEventListener("click", () => {
     bar?.classList.add("hidden");
+    localStorage.setItem("announcement-closed", "1");
   });
 </script>

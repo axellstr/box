@@ -12,7 +12,8 @@
       "Bash(python3 -m json.tool)",
       "Bash(find /home/alex/box -name *.env* -o -name astro.config.*)",
       "Bash(xargs ls:*)",
-      "Bash(find /home/alex/box -name tailwind.config.* -type f)"
+      "Bash(find /home/alex/box -name tailwind.config.* -type f)",
+      "Bash(curl -s http://localhost:3000)"
     ]
   }
 }

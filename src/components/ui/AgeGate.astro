@@ -1,0 +1,72 @@
+---
+---
+
+<div
+  id="age-gate"
+  class="fixed inset-0 flex items-center justify-center p-4"
+  style="display:none; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"
+  aria-hidden="true"
+>
+  <div class="w-full max-w-sm bg-surface rounded-2xl shadow-2xl overflow-hidden text-center">
+    <!-- Header -->
+    <div class="px-6 pt-8 pb-4">
+      <img src="/sexlogo.png" alt="sexbox.shop" class="h-6 mx-auto mb-6" />
+      <h2 class="font-heading text-xl font-bold text-ink uppercase tracking-wide mb-2">
+        Age Verification
+      </h2>
+      <p class="text-sm text-ink/60 leading-relaxed">
+        This website contains adult content. You must be at least <strong class="text-ink">18 years old</strong> to enter.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="px-6 pb-6 pt-2 space-y-3">
+      <button
+        id="age-gate-confirm"
+        class="w-full bg-ink text-surface font-semibold rounded-full py-3.5 text-sm hover:bg-accent transition-colors"
+      >
+        I am 18 or older — Enter
+      </button>
+      <button
+        id="age-gate-deny"
+        class="w-full bg-transparent text-ink/50 font-medium rounded-full py-3 text-sm hover:text-ink transition-colors"
+      >
+        I am under 18 — Leave
+      </button>
+    </div>
+
+    <!-- Footer note -->
+    <div class="px-6 pb-6">
+      <p class="text-[11px] text-ink/35 leading-snug">
+        By entering, you confirm that you are of legal age to view adult content in your jurisdiction.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const gate = document.getElementById("age-gate")!;
+  const confirmBtn = document.getElementById("age-gate-confirm")!;
+  const denyBtn = document.getElementById("age-gate-deny")!;
+
+  // Only show if not yet verified
+  if (localStorage.getItem("age-verified") !== "true") {
+    gate.style.display = "flex";
+    gate.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  confirmBtn.addEventListener("click", () => {
+    localStorage.setItem("age-verified", "true");
+    gate.style.opacity = "0";
+    gate.style.transition = "opacity 0.3s ease";
+    setTimeout(() => {
+      gate.remove();
+      document.body.style.overflow = "";
+    }, 300);
+  });
+
+  denyBtn.addEventListener("click", () => {
+    window.location.href = "https://www.google.com";
+  });
+</script>

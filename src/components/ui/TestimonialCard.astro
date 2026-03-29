@@ -1,7 +1,4 @@
 ---
-import StarRating from "./StarRating.astro";
-import { CircleCheckBig } from "@lucide/astro";
-
 interface Props {
   author: string;
   rating: number;
@@ -9,14 +6,12 @@ interface Props {
   verified?: boolean;
 }
 
-const { author, rating, text, verified = false } = Astro.props;
+const { author, text } = Astro.props;
 ---
 
 <div class="border border-ink/12 rounded-card p-6 sm:p-8 min-w-[300px] sm:min-w-[360px] snap-start">
-  <StarRating rating={rating} size={18} class="mb-3" />
   <div class="flex items-center gap-1.5 mb-3">
     <span class="font-heading font-bold text-base sm:text-lg text-ink">{author}</span>
-    {verified && <CircleCheckBig size={18} class="text-accent-dark" />}
   </div>
   <p class="text-sm text-ink/60 leading-relaxed line-clamp-4">
     &ldquo;{text}&rdquo;

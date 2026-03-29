@@ -280,7 +280,28 @@ export const testimonials = [
     author: "Jamie & Chris",
     rating: 5,
     text: "The Couples Connection box reignited our spark. We've ordered three times now and each box brings something new and exciting to try together.",
-    verified: true,
+    verified: false,
+  },
+  {
+    id: "t4",
+    author: "Alex R.",
+    rating: 5,
+    text: "Genuinely impressed by the product quality. Everything arrived beautifully packaged and way more premium than the price suggests. Will definitely reorder.",
+    verified: false,
+  },
+  {
+    id: "t5",
+    author: "Mia T.",
+    rating: 4,
+    text: "Love the variety in each box — it's clear a lot of thought goes into the curation. The discreet shipping is a huge bonus. Already gifted one to a friend.",
+    verified: false,
+  },
+  {
+    id: "t6",
+    author: "Anonymous",
+    rating: 5,
+    text: "Best self-care purchase I've made this year. Subscribed after my first box and haven't looked back. Highly recommend to anyone curious about trying.",
+    verified: false,
   },
 ];
 
